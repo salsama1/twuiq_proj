@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Geo_Cortex_Assistant UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/ui.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="panel">
+        <h2>Geo Cortex Assistant</h2>
+        <div id="status" class="status idle">Ready</div>
+
+        <label>Query</label>
+        <textarea id="query" rows="5" placeholder="e.g. Export 200 Gold occurrences in Riyadh Region as GeoJSON"></textarea>
+
+        <div class="row">
+          <button id="runAgent">Run Agent</button>
+          <button id="runRag">Run RAG</button>
+        </div>
+
+        <hr />
+
+        <h3>Layers</h3>
+        <div class="row">
+          <label class="check"><input id="togglePoints" type="checkbox" checked /> Points</label>
+          <label class="check"><input id="toggleHeat" type="checkbox" checked /> Heatmap</label>
+        </div>
+
+        <h3>Filters (for export/stats)</h3>
+        <div class="grid">
+          <label>Commodity <input id="commodity" placeholder="Gold" /></label>
+          <label>Region <input id="region" placeholder="Riyadh Region" /></label>
+          <label>Occurrence Type <input id="occType" placeholder="Metallic" /></label>
+          <label>Limit <input id="limit" type="number" value="200" /></label>
+          <label>Lat <input id="lat" type="number" step="any" placeholder="24.7136" /></label>
+          <label>Lon <input id="lon" type="number" step="any" placeholder="46.6753" /></label>
+          <label>Radius (km) <input id="radius" type="number" step="any" placeholder="200" /></label>
+          <label>Bin (km) <input id="binKm" type="number" step="any" value="50" /></label>
+        </div>
+
+        <div class="row">
+          <button id="statsByRegion">Stats by Region</button>
+          <button id="importance">Importance</button>
+          <button id="heatmap">Heatmap</button>
+        </div>
+
+        <div class="row">
+          <a id="dlGeojson" class="linkbtn" download>Download GeoJSON</a>
+          <a id="dlCsv" class="linkbtn" download>Download CSV</a>
+        </div>
+
+        <hr />
+
+        <h3>Output</h3>
+        <div class="respBox">
+          <div class="respTitle">Assistant response</div>
+          <div id="responseText" class="respText"></div>
+          <button id="toggleRaw" class="smallBtn">Show raw JSON</button>
+        </div>
+        <pre id="output" class="output"></pre>
+
+        <h3>Results</h3>
+        <div id="tableWrap" class="tableWrap">
+          <div class="tableHint">Run a query to populate results.</div>
+          <table id="resultsTable" class="table">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </aside>
+
+      <main class="mapWrap">
+        <div id="map"></div>
+        <div id="legend" class="legend hidden">
+          <div class="legendTitle">Heatmap (count)</div>
+          <div class="legendBar"></div>
+          <div class="legendLabels">
+            <span id="legendMin">0</span>
+            <span id="legendMax">0</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/ui.js"></script>
+  </body>
+</html>
+

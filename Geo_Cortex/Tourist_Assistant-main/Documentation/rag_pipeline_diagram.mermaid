@@ -1,0 +1,38 @@
+flowchart TD
+    A[User Input<br/>Natural Language Query<br/>Example: Suggest seafood restaurants in Riyadh] --> B[Query Processing<br/>Text Preprocessing & Tokenization]
+    
+    B --> C[Query Embedding<br/>Convert text to vector<br/>Using OpenAI Ada-002]
+    
+    C --> D[Vector Database Search<br/>Similarity Search<br/>Cosine Distance]
+    
+    D --> E[(Vector Store<br/>Place Embeddings<br/>Metadata Index)]
+    
+    E --> F[Top-K Retrieval<br/>Most Relevant Places<br/>K=5-10 results]
+    
+    F --> G[Context Assembly<br/>Retrieved places +<br/>Metadata + Location]
+    
+    G --> H[LLM Generation<br/>GPT-4 with Context<br/>Prompt Engineering]
+    
+    H --> I[Response Generation<br/>Coherent Recommendations<br/>With Explanations]
+    
+    I --> J{Places Identified?}
+    
+    J -->|Yes| K[Extract Place Names<br/>UUID Lookup<br/>Database Validation]
+    J -->|No| L[Text-Only Response]
+    
+    K --> M{Found in Database?}
+    M -->|Yes| N[Save to User ToVisit List<br/>Update Database]
+    M -->|No| O[Log Missing Places<br/>For Future Addition]
+    
+    N --> P[Assemble Final Response<br/>AI Text + Places List<br/>+ Map Coordinates]
+    O --> P
+    L --> P
+    
+    P --> Q[Return JSON Response<br/>To Client Application]
+    
+    style A fill:#e3f2fd
+    style C fill:#f3e5f5
+    style E fill:#e8f5e8
+    style H fill:#fff3e0
+    style N fill:#fce4ec
+    style Q fill:#e0f2f1

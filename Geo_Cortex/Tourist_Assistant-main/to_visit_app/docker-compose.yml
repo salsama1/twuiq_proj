@@ -1,0 +1,41 @@
+version: '3.12'
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama_container
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  fastapi_app:
+    build: .
+    container_name: fastapi_container
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres_db
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres_db:5432/postgres
+
+  postgres_db:
+    image: postgres:14
+    container_name: postgres_container
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  ollama_data:
+  postgres_data:

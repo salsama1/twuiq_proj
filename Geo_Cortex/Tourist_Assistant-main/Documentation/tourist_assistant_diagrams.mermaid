@@ -1,0 +1,17 @@
+flowchart TD
+    A[User accesses login] --> B[Enter username/password]
+    B --> C{Validate credentials}
+    C -->|Invalid| D[Show error message]
+    D --> B
+    C -->|Valid| E[Hash password & verify]
+    E --> F{Authentication successful?}
+    F -->|No| D
+    F -->|Yes| G[Generate JWT token]
+    G --> H[Return token to client]
+    H --> I[User authenticated]
+    I --> J[Access protected routes]
+    J --> K[End]
+
+    style A fill:#e1f5fe
+    style K fill:#c8e6c9
+    style D fill:#ffcdd2

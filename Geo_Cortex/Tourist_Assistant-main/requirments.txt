@@ -1,0 +1,13 @@
+langchain
+langchain-openai
+langchain-text-splitters
+fastapi
+uvicorn
+pandas
+sqlalchemy
+python-dotenv
+python-jose
+bcrypt
+passlib
+anyio
+httpx

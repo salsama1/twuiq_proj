@@ -1,0 +1,173 @@
+<svg viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for modern look -->
+    <linearGradient id="uiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="apiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="dbGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="authGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C2D12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A16207;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="llmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#BE185D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C2410C;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="spatialGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E3A8A;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Arrow marker -->
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+              refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
+      </marker>
+    </defs>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropshadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#00000040"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1000" height="800" fill="#F8FAFC"/>
+  
+  <!-- Title -->
+  <text x="500" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" 
+        text-anchor="middle" fill="#1F2937">System Architecture Diagram</text>
+  
+  <!-- User Interface -->
+  <rect x="50" y="100" width="200" height="120" rx="10" ry="10" 
+        fill="url(#uiGradient)" filter="url(#dropshadow)"/>
+  <text x="150" y="135" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">User Interface</text>
+  <text x="150" y="155" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">(Future Frontend)</text>
+  <text x="150" y="175" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">React/Vue/Angular</text>
+  <text x="150" y="195" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">Web Application</text>
+  
+  <!-- FastAPI Backend -->
+  <rect x="400" y="100" width="200" height="120" rx="10" ry="10" 
+        fill="url(#apiGradient)" filter="url(#dropshadow)"/>
+  <text x="500" y="135" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">FastAPI Backend</text>
+  <text x="500" y="155" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">(Python, REST API)</text>
+  <text x="500" y="175" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• API Endpoints</text>
+  <text x="500" y="195" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Business Logic</text>
+  
+  <!-- Database -->
+  <rect x="750" y="100" width="200" height="120" rx="10" ry="10" 
+        fill="url(#dbGradient)" filter="url(#dropshadow)"/>
+  <text x="850" y="135" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">Database</text>
+  <text x="850" y="155" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">PostgreSQL / ORM</text>
+  <text x="850" y="175" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Data Storage</text>
+  <text x="850" y="195" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• SQLAlchemy ORM</text>
+  
+  <!-- Authentication Service -->
+  <rect x="325" y="300" width="200" height="120" rx="10" ry="10" 
+        fill="url(#authGradient)" filter="url(#dropshadow)"/>
+  <text x="425" y="335" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">Authentication Service</text>
+  <text x="425" y="355" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">(OAuth2, JWT tokens)</text>
+  <text x="425" y="375" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• User Management</text>
+  <text x="425" y="395" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Token Validation</text>
+  
+  <!-- LLM-RAG Recommendation -->
+  <rect x="50" y="500" width="250" height="120" rx="10" ry="10" 
+        fill="url(#llmGradient)" filter="url(#dropshadow)"/>
+  <text x="175" y="535" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">LLM-RAG Recommendation</text>
+  <text x="175" y="555" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">(Query Handler + LLM)</text>
+  <text x="175" y="575" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Vector Database</text>
+  <text x="175" y="595" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• AI Recommendations</text>
+  
+  <!-- Spatial Visualizer -->
+  <rect x="400" y="500" width="200" height="120" rx="10" ry="10" 
+        fill="url(#spatialGradient)" filter="url(#dropshadow)"/>
+  <text x="500" y="535" font-family="Arial, sans-serif" font-size="16" font-weight="bold" 
+        text-anchor="middle" fill="white">Spatial Visualizer</text>
+  <text x="500" y="555" font-family="Arial, sans-serif" font-size="12" 
+        text-anchor="middle" fill="#E5E7EB">(PyDeck, Map View)</text>
+  <text x="500" y="575" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Geospatial Data</text>
+  <text x="500" y="595" font-family="Arial, sans-serif" font-size="11" 
+        text-anchor="middle" fill="#E5E7EB">• Interactive Maps</text>
+  
+  <!-- Connections -->
+  
+  <!-- UI to FastAPI (bidirectional) -->
+  <line x1="250" y1="150" x2="400" y2="150" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="400" y1="170" x2="250" y2="170" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="325" y="145" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">HTTP Requests</text>
+  <text x="325" y="185" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">JSON Responses</text>
+  
+  <!-- FastAPI to Database (bidirectional) -->
+  <line x1="600" y1="150" x2="750" y2="150" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="750" y1="170" x2="600" y2="170" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="675" y="145" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">SQL Queries</text>
+  <text x="675" y="185" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">Data Results</text>
+  
+  <!-- FastAPI to Auth -->
+  <line x1="500" y1="220" x2="425" y2="300" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="470" y="265" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">Auth Requests</text>
+  
+  <!-- Auth to LLM-RAG -->
+  <line x1="350" y1="420" x2="200" y2="500" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="280" y="465" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">Authorized Queries</text>
+  
+  <!-- Auth to Spatial -->
+  <line x1="450" y1="420" x2="500" y2="500" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="480" y="465" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#6B7280">Map Requests</text>
+  
+  <!-- Data Flow Labels -->
+  <text x="500" y="750" font-family="Arial, sans-serif" font-size="14" font-weight="bold" 
+        text-anchor="middle" fill="#1F2937">Data Flow Architecture</text>
+  
+  <!-- Legend -->
+  <rect x="750" y="650" width="220" height="120" rx="5" ry="5" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="860" y="675" font-family="Arial, sans-serif" font-size="14" font-weight="bold" 
+        text-anchor="middle" fill="#1F2937">Legend</text>
+  
+  <rect x="760" y="685" width="15" height="10" fill="url(#uiGradient)"/>
+  <text x="785" y="695" font-family="Arial, sans-serif" font-size="10" fill="#374151">Frontend Layer</text>
+  
+  <rect x="760" y="705" width="15" height="10" fill="url(#apiGradient)"/>
+  <text x="785" y="715" font-family="Arial, sans-serif" font-size="10" fill="#374151">API Layer</text>
+  
+  <rect x="760" y="725" width="15" height="10" fill="url(#dbGradient)"/>
+  <text x="785" y="735" font-family="Arial, sans-serif" font-size="10" fill="#374151">Data Layer</text>
+  
+  <rect x="760" y="745" width="15" height="10" fill="url(#authGradient)"/>
+  <text x="785" y="755" font-family="Arial, sans-serif" font-size="10" fill="#374151">Security Layer</text>
+</svg>
