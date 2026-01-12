@@ -1,0 +1,7 @@
+#
+# Optional raster stack for /rasters/*
+#
+# On Windows + Python 3.14, wheels may not exist. If pip fails, use Conda or switch to Python 3.12.
+#
+rasterio
+pillow
