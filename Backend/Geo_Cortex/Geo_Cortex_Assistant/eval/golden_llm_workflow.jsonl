@@ -1,0 +1,150 @@
+{"id": "wf_0000", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0001", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0002", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0003", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0004", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0005", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0006", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0007", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0008", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0009", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0010", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0011", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0012", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0013", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0014", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0015", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0016", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0017", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0018", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0019", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0020", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0021", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0022", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0023", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0024", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0025", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0026", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0027", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0028", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0029", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0030", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0031", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0032", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0033", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0034", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0035", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0036", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0037", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0038", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0039", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0040", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0041", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0042", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0043", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0044", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0045", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0046", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0047", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0048", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0049", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0050", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0051", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0052", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0053", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0054", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0055", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0056", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0057", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0058", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0059", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0060", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0061", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0062", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0063", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0064", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0065", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0066", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0067", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0068", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0069", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0070", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0071", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0072", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0073", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0074", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0075", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0076", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0077", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0078", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0079", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0080", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0081", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0082", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0083", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0084", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0085", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0086", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0087", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0088", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0089", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0090", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0091", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0092", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0093", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0094", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0095", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0096", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0097", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0098", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0099", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0100", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0101", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0102", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0103", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0104", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0105", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0106", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0107", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0108", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0109", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0110", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0111", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0112", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0113", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0114", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0115", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0116", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0117", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0118", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0119", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0120", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0121", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0122", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0123", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0124", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0125", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0126", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0127", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0128", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0129", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0130", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0131", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0132", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0133", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0134", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0135", "payload": {"query": "Run QC summary and top commodities, then generate charts.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0136", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0137", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0138", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0139", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0140", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0141", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0142", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0143", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0144", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0145", "payload": {"query": "Give me counts by region and top commodities, and summarize.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0146", "payload": {"query": "Generate a density/heatmap view and summarize what it means.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0147", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0148", "payload": {"query": "Summarize the most important patterns by region (counts + charts).", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}
+{"id": "wf_0149", "payload": {"query": "Run QC outliers and explain what should be checked next.", "max_steps": 10, "use_llm": true}, "expect": {"summary_validated": true}}

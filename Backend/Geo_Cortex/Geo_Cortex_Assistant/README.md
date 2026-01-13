@@ -97,3 +97,17 @@ Geo_Cortex_Assistant/
 ├── MODS.csv             # dataset source (also used for embeddings)
 └── audit.log            # governance audit (JSON lines)
 ```
+
+## Evaluated performance (how to reproduce)
+
+Run the “defensible accuracy” report (golden + holdout, Wilson 95% lower bounds):
+
+```bash
+python scripts/report_accuracy_claims.py
+```
+
+Useful knobs:
+
+- `CLAIM_RAG_K=5` (default 5)
+- `CLAIM_LLM_N=25` (workflow sample size per set)
+- `EVAL_TIMEOUT_SEC=45` (HTTP timeout per workflow call)

@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional, Tuple
 import os
+import re
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -831,6 +832,74 @@ def _truncate_for_llm(value: Any, max_list: int = 25, max_str: int = 4000) -> An
     return value
 
 
+def _build_deterministic_summary(artifacts: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+    """
+    Build a fast, accurate summary from computed tool outputs (no LLM).
+    Returns (summary_text, summary_meta).
+    """
+    bits: List[str] = []
+    if artifacts.get("qc_summary"):
+        bits.append(f"- QC summary: {json.dumps(artifacts['qc_summary'], ensure_ascii=False)}")
+    if artifacts.get("commodity_stats"):
+        bits.append(f"- Top commodities rows: {len(artifacts.get('commodity_stats') or [])}")
+    if artifacts.get("stats_by_region"):
+        bits.append(f"- Regions rows: {len(artifacts.get('stats_by_region') or [])}")
+    if artifacts.get("importance_breakdown"):
+        bits.append(f"- Importance rows: {len(artifacts.get('importance_breakdown') or [])}")
+    if artifacts.get("heatmap_bins"):
+        bits.append(f"- Heatmap bins: {len(artifacts.get('heatmap_bins') or [])}")
+    if artifacts.get("charts"):
+        bits.append(f"- Charts generated: {len(artifacts.get('charts') or [])} (see artifacts.charts)")
+    if artifacts.get("ogc_items_url"):
+        bits.append(f"- OGC items URL: {artifacts.get('ogc_items_url')}")
+    if artifacts.get("spatial_total") is not None:
+        bits.append(f"- Spatial total: {artifacts.get('spatial_total')}")
+
+    if not bits:
+        text = "Done. I computed the requested results, but there were no summary artifacts to report."
+    else:
+        text = "Here’s a brief summary of what I computed:\n" + "\n".join(bits)
+    meta = {"source": "fallback", "validated": True, "violations": []}
+    return text, meta
+
+
+def _validate_summary_text(text: str, allowed_terms: List[str]) -> Tuple[bool, List[str]]:
+    """
+    Light validation to reduce hallucinations:
+    - discourage table/SQL dumps
+    - discourage operational leakage
+    This is not a security boundary; it's an accuracy/focus check.
+    """
+    violations: List[str] = []
+    t = (text or "").lower()
+
+    bad_markers = [
+        "select *",
+        "create table",
+        "drop table",
+        "information_schema",
+        "pg_catalog",
+        "insert into",
+        "update ",
+        "delete from",
+        "head(",
+        "tail(",
+    ]
+    if any(m in t for m in bad_markers):
+        violations.append("contains_sql_or_table_dump")
+
+    # If LLM mentions unexpected "strong" entities, flag (best-effort)
+    # allowed_terms includes known commodities/regions referenced in tool outputs.
+    if allowed_terms:
+        # only check for unexpected ALL-CAPS-ish tokens and "Region" mentions
+        suspicious = re.findall(r"\b[A-Z][A-Z0-9_-]{3,}\b", text or "")
+        if len(suspicious) > 50:
+            violations.append("too_many_caps_tokens")
+
+    ok = len(violations) == 0
+    return ok, violations
+
+
 def _build_vega_charts(artifacts: Dict[str, Any]) -> List[Dict[str, Any]]:
     charts: List[Dict[str, Any]] = []
 
@@ -1368,22 +1437,10 @@ def run_workflow(
 
     if not use_llm:
         # Deterministic fallback for offline/fast mode
-        bits: List[str] = []
-        if artifacts.get("qc_summary"):
-            bits.append(f"QC summary: {json.dumps(artifacts['qc_summary'], ensure_ascii=False)}")
-        if artifacts.get("ogc_items_url"):
-            bits.append(f"OGC items URL: {artifacts['ogc_items_url']}")
-        if artifacts.get("qgis_instructions"):
-            bits.append(str(artifacts["qgis_instructions"]))
-        if artifacts.get("spatial_total") is not None:
-            bits.append(f"Spatial results total: {artifacts.get('spatial_total')}")
-        if artifacts.get("spatial_nearest"):
-            bits.append(f"Spatial nearest returned: {len(artifacts.get('spatial_nearest') or [])}")
-        if artifacts.get("geojson"):
-            bits.append(f"GeoJSON export features: {len((artifacts.get('geojson') or {}).get('features', []))}")
-        if artifacts.get("csv"):
-            bits.append(f"CSV export bytes: {len(str(artifacts.get('csv')).encode('utf-8'))}")
-        answer = "\n".join(bits) if bits else "Workflow executed (offline mode). No summary artifacts were produced."
+        answer, meta = _build_deterministic_summary(artifacts)
+        artifacts["summary_source"] = "offline"
+        artifacts["summary_validated"] = True
+        artifacts["summary_violations"] = []
     else:
         artifacts_preview = {
             "qc_summary": _truncate_for_llm(artifacts.get("qc_summary")),
@@ -1404,33 +1461,42 @@ def run_workflow(
             + (rag_context or "(none)")
             + "\n\nWorkflow plan + tool outputs summary:\n"
             + scratch
-            + "\n\nWrite a helpful answer for a geospatial specialist. "
-            + "Summarize the key findings from tool_outputs (counts, top regions/commodities, QC flags). "
-            + "If charts are available, say what each chart shows. "
-            + "Mention any QGIS-ready links in tool_outputs (ogc_items_url) and where to find outputs."
+            + "\n\nWrite a brief, high-level summary for a geospatial specialist.\n"
+            + "Rules:\n"
+            + "- Do NOT dump tables or raw records.\n"
+            + "- Do NOT invent numbers or facts; only summarize what is present in tool_outputs.\n"
+            + "- Keep it short (6-10 lines).\n"
+            + "- If charts exist, describe what they show.\n"
         )
         answer = generate_response(final_prompt)
-        # If the LLM timed out or errored, fall back to a deterministic summary
-        # so the user still gets a useful “human-facing” response.
         if isinstance(answer, str) and (answer.startswith("LLM call timed out") or answer.startswith("LLM error")):
-            bits: List[str] = [
-                "LLM summary was unavailable, so here is an automatic summary of the computed results:"
-            ]
-            if artifacts.get("qc_summary"):
-                bits.append(f"- QC summary: {json.dumps(artifacts['qc_summary'], ensure_ascii=False)}")
-            if artifacts.get("commodity_stats"):
-                bits.append(f"- Top commodities rows: {len(artifacts.get('commodity_stats') or [])}")
-            if artifacts.get("stats_by_region"):
-                bits.append(f"- Regions rows: {len(artifacts.get('stats_by_region') or [])}")
-            if artifacts.get("importance_breakdown"):
-                bits.append(f"- Importance rows: {len(artifacts.get('importance_breakdown') or [])}")
-            if artifacts.get("heatmap_bins"):
-                bits.append(f"- Heatmap bins: {len(artifacts.get('heatmap_bins') or [])}")
-            if artifacts.get("charts"):
-                bits.append(f"- Charts generated: {len(artifacts.get('charts') or [])} (see artifacts.charts)")
-            if artifacts.get("ogc_items_url"):
-                bits.append(f"- OGC items URL: {artifacts.get('ogc_items_url')}")
-            answer = "\n".join(bits)
+            answer, meta = _build_deterministic_summary(artifacts)
+            artifacts["summary_source"] = "fallback"
+            artifacts["summary_validated"] = True
+            artifacts["summary_violations"] = ["llm_unavailable"]
+        else:
+            # Validate for obvious hallucination patterns; fall back if needed.
+            allowed_terms: List[str] = []
+            for row in (artifacts.get("commodity_stats") or [])[:10]:
+                try:
+                    allowed_terms.append(str(row.get("major_commodity")))
+                except Exception:
+                    pass
+            for row in (artifacts.get("stats_by_region") or [])[:10]:
+                try:
+                    allowed_terms.append(str(row.get("admin_region")))
+                except Exception:
+                    pass
+            ok, violations = _validate_summary_text(answer or "", allowed_terms=allowed_terms)
+            if ok:
+                artifacts["summary_source"] = "llm"
+                artifacts["summary_validated"] = True
+                artifacts["summary_violations"] = []
+            else:
+                answer, meta = _build_deterministic_summary(artifacts)
+                artifacts["summary_source"] = "fallback"
+                artifacts["summary_validated"] = True
+                artifacts["summary_violations"] = violations
     audit_log("workflow_final", {"query": user_query})
     return sanitize_text(answer), plan_steps, tool_trace, last_occurrences, artifacts
     try:

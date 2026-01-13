@@ -71,3 +71,11 @@ If Ollama is not running, use offline mode:
 
 - For full setup + optional GDAL/raster support: `SETUP.md`
 - For complete system reference: `DOCUMENTATION.md`
+
+### (Optional) Show evaluated accuracy numbers
+
+If you want a defensible accuracy number to quote (golden + holdout, Wilson 95% lower bounds):
+
+```bash
+python scripts/report_accuracy_claims.py
+```

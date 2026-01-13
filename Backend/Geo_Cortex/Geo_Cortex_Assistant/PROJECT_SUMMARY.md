@@ -2,46 +2,36 @@
 
 ## Overview
 
-Geo_Cortex_Assistant is a FastAPI-based application designed to help geologists and researchers explore and manage geological occurrence data from the MODS (Mineral Occurrence Database System) dataset. It's built following the same architecture pattern as the Tourist_Assistant project but adapted for geological data.
+Geo_Cortex_Assistant is a **backend-only geospatial platform** (FastAPI + PostGIS) built for geospatial scientists. It supports:
+
+- **RAG retrieval** over a MODS dataset (FAISS embeddings + deterministic lookups for IDs/names)
+- An **agentic workflow layer** that turns natural language into **multi-step geospatial operations**
+- **GIS-ready outputs** (GeoJSON/CSV/OGC API Features/MVT tiles) + chart payloads
+- **Governance + audit logging** and LLM guardrails (no table dumps)
 
 ## Key Features
 
-### 1. **User Authentication**
-- JWT-based authentication with OAuth2
-- User registration and login
-- Secure password hashing with bcrypt
-- Role-based access control
+### 1. **Agentic workflow**
+- `POST /agent/workflow`: run tool plans + return summaries, artifacts, charts, and traceability
+- `POST /agent/workflow/file`: upload a geospatial file, store AOI + FeatureCollection in session, then run ops
 
 ### 2. **RAG (Retrieval-Augmented Generation) System**
-- FAISS vector store for semantic search
-- OpenAI LLM integration for intelligent query responses
-- Automatic extraction of structured occurrence data from queries
-- Context-aware responses based on MODS data
+- FAISS vector store for semantic search over MODS text
+- Deterministic exact lookups for **MODS IDs** and **site names** (improves accuracy)
+- Structured `OccurrenceInfo` extraction for retrieved rows
 
-### 3. **Geological Occurrence Management**
-- Search and filter MODS occurrences by:
-  - Major commodity (Gold, Copper, Zinc, etc.)
-  - Administrative region
-  - Occurrence type (Metallic, Non Metallic)
-- Save occurrences to personal lists
-- Manage saved occurrences (CRUD operations)
+### 3. **Geospatial operations (vector + raster)**
+- Vector: intersects/dwithin/buffer/nearest + overlay/union/intersection/difference + dissolve + spatial joins
+- QC: duplicates/outliers/summary checks
+- Optional raster: upload, tiles, sampling, zonal stats
 
 ### 4. **API Endpoints**
 
-#### Authentication
-*(Removed — API is public)*
-
-#### Occurrences
-- `GET /occurrences/` - Get all saved occurrences
-- `GET /occurrences/{id}` - Get specific occurrence
-- `POST /occurrences/` - Save new occurrence
-- `PUT /occurrences/{id}` - Update occurrence
-- `DELETE /occurrences/{id}` - Delete occurrence
-- `GET /occurrences/mods/search` - Search MODS database
-
-#### LLM Queries
-- `POST /query/` - Direct LLM query
-- `POST /query/rag` - RAG query with occurrence extraction
+#### Primary “demo” endpoints
+- `POST /agent/workflow`
+- `POST /agent/workflow/file`
+- `POST /query/rag` (RAG-only query flow)
+- `GET /ogc/collections/mods_occurrences/items` (QGIS-friendly OGC API Features)
 
 ## Architecture
 
@@ -135,26 +125,21 @@ Geo_Cortex_Assistant/
 
 - **FastAPI** - Modern Python web framework
 - **SQLAlchemy** - ORM for database operations
-- **PostgreSQL** - Relational database (SQLite for dev)
+- **PostgreSQL + PostGIS** - Relational + spatial database
 - **FAISS** - Vector similarity search
 - **Ollama** - Local LLM + embeddings runtime
 - **LangChain** - LLM framework and utilities
-- **PostGIS** - Spatial extension (geo queries)
 - **Pydantic** - Data validation
 
 ## Usage Example
 
 ```python
-# 1. Query with RAG
+# 1. Query with RAG (API)
 POST /query/rag
 {
   "query": "Find gold occurrences in Riyadh region with high importance"
 }
 # Returns AI response + structured occurrence data
-
-# 4. Search occurrences
-GET /occurrences/mods/search?commodity=Gold&region=Riyadh Region
-# Returns filtered occurrences
 ```
 
 ## Next Steps
@@ -187,4 +172,4 @@ GET /occurrences/mods/search?commodity=Gold&region=Riyadh Region
 
 ## Conclusion
 
-Geo_Cortex_Assistant successfully adapts the Tourist_Assistant architecture for geological data, providing a powerful tool for exploring and managing mineral occurrence information through natural language queries and structured data management.
+Geo_Cortex_Assistant provides a robust backend for geospatial scientists: agentic workflows, high-accuracy RAG retrieval, GIS interoperability, and governed outputs suitable for demos and judge evaluation.

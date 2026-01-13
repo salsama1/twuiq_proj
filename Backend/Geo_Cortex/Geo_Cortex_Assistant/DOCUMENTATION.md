@@ -120,3 +120,94 @@ Optional GDAL: GeoPackage + zipped Shapefile/FGDB
 - Pytest: `python -m pytest -q`
 - Demo ops: `python scripts/demo_ops.py`
 
+## Performance testing (LLM + RAG)
+
+### Measure end-to-end latency (HTTP)
+
+This hits the running API and reports p50/p90/p95 latencies:
+
+```bash
+python scripts/bench_http.py
+```
+
+Useful knobs:
+
+- `BENCH_N=20` (number of timed requests per case)
+- `BASE_URL=http://127.0.0.1:8000`
+- `BENCH_TIMEOUT_SEC=120`
+
+### Evaluate RAG retrieval quality (recall@k)
+
+This runs locally (no HTTP) and measures whether the correct MODS row is retrieved:
+
+```bash
+python scripts/eval_rag_recall.py
+```
+
+Useful knobs:
+
+- `RAG_EVAL_N=50`
+- `RAG_K=5`
+
+## Defensible accuracy claims (Golden + Holdout evaluation)
+
+To make defensible claims (and avoid overfitting), we maintain **frozen datasets** under `eval/`:
+
+- **Golden** set: regression benchmark
+- **Holdout** set: separate benchmark to reduce template leakage / overfitting risk
+
+### 1) Build golden datasets (one time), then freeze/commit
+
+```bash
+python scripts/generate_golden_rag.py
+python scripts/generate_golden_llm_workflow.py
+```
+
+This writes:
+
+- `eval/golden_rag.jsonl` (~300 queries by default)
+- `eval/golden_llm_workflow.jsonl` (~150 workflow prompts by default)
+
+### 2) Build holdout datasets (one time), then freeze/commit
+
+```bash
+python scripts/generate_holdout_rag.py
+python scripts/generate_holdout_llm_workflow.py
+```
+
+This writes:
+
+- `eval/holdout_rag.jsonl` (~300 queries by default)
+- `eval/holdout_llm_workflow.jsonl` (~150 workflow prompts by default)
+
+### 3) Run evaluators (repeatable)
+
+```bash
+# Golden
+python scripts/eval_golden_rag.py
+python scripts/eval_golden_llm_workflow.py
+
+# Holdout
+RAG_GOLDEN_PATH=eval/holdout_rag.jsonl python scripts/eval_golden_rag.py
+LLM_GOLDEN_PATH=eval/holdout_llm_workflow.jsonl python scripts/eval_golden_llm_workflow.py
+```
+
+### 4) One-command report (recommended for demo/judges)
+
+```bash
+python scripts/report_accuracy_claims.py
+```
+
+Useful knobs:
+
+- `CLAIM_RAG_K=5` (default 5)
+- `CLAIM_LLM_N=25` (how many workflow prompts sampled per set)
+- `EVAL_TIMEOUT_SEC=45` (HTTP timeout per workflow call)
+
+Recommended metrics to report (with **Wilson 95% lower bounds**):
+
+- **RAG**: recall@5 (≥ 0.90–0.95 target)
+- **LLM summaries**:
+  - `system_validated_rate` (≥ 0.95 target)
+  - `llm_used_rate` (keep high so the model is actually used, not always falling back)
+

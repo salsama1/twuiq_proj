@@ -116,6 +116,10 @@ class AgentArtifacts(BaseModel):
     spatial_nearest: Optional[List[Dict[str, Any]]] = None
     # Chart-ready payloads (Vega-Lite specs + data)
     charts: Optional[List[Dict[str, Any]]] = None
+    # Human-summary metadata (for evaluation + safety)
+    summary_source: Optional[Literal["llm", "fallback", "offline"]] = None
+    summary_validated: Optional[bool] = None
+    summary_violations: Optional[List[str]] = None
     # Escape hatch for any future artifacts
     extra: Dict[str, Any] = Field(default_factory=dict)
 

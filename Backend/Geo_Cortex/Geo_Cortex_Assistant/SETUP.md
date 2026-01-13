@@ -65,6 +65,14 @@ python scripts/smoke_test.py
 python -m pytest -q
 ```
 
+### 7) (Optional) Evaluated accuracy report
+
+This prints golden + holdout metrics and **Wilson 95% lower bounds**:
+
+```bash
+python scripts/report_accuracy_claims.py
+```
+
 ### Optional: enable more file formats (GDAL stack)
 
 This enables parsing:
