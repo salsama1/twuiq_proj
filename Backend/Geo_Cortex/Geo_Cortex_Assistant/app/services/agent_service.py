@@ -15,6 +15,9 @@ from app.services.router_service import handle_query, rag_retrieve
 from app.services.chat_store import ChatMessage
 from app.services.governance import audit_log, sanitize_text, feature_enabled
 
+from shapely.geometry import shape as shapely_shape, mapping as shapely_mapping
+from shapely.ops import unary_union
+
 
 _AGENT_INSTRUCTIONS = """You are GeoCortex, an agentic RAG assistant for the MODS dataset.
 
@@ -48,6 +51,11 @@ Available tools:
 - spatial_query: args {op: 'intersects'|'dwithin', geometry: object, distance_m?: float, commodity?: str, region?: str, occurrence_type?: str, exploration_status?: str, limit?: int, offset?: int}
 - spatial_buffer: args {geometry: object, distance_m: float}
 - spatial_nearest: args {geometry: object, limit?: int, commodity?: str, region?: str, occurrence_type?: str, exploration_status?: str}
+- spatial_overlay: args {op: 'union'|'intersection'|'difference'|'symmetric_difference', a?: object, b?: object, feature_collection_ref?: 'uploaded', a_index?: int, b_index?: int}
+- spatial_dissolve: args {feature_collection?: object, feature_collection_ref?: 'uploaded', by_property: str}
+- spatial_join_mods_counts: args {feature_collection?: object, feature_collection_ref?: 'uploaded', predicate?: 'intersects'|'contains', id_property?: str}
+- spatial_join_mods_nearest: args {feature_collection?: object, feature_collection_ref?: 'uploaded', id_property?: str}
+- rasters_zonal_stats: args {raster_id: str, geometry?: object, geometry_ref?: 'uploaded', band?: int}
 - For file-based workflows: you may pass geometry_ref="uploaded" instead of geometry, when using /agent/file.
 - rag: args {query: str}
 
@@ -942,6 +950,12 @@ def run_workflow(
         uploaded = get_uploaded_geometry()
     except Exception:
         uploaded = None
+    try:
+        from app.services.request_context import get_uploaded_feature_collection
+
+        uploaded_fc = get_uploaded_feature_collection()
+    except Exception:
+        uploaded_fc = None
 
     ql = user_query.lower()
     if uploaded is not None:
@@ -954,6 +968,38 @@ def run_workflow(
 
     if "qc" in ql or "quality" in ql or "duplicates" in ql:
         plan_steps.append({"action": "qc_summary", "args": {}, "why": "User asked for QC/quality."})
+
+    # Add common “summary + charts” analytics deterministically when user asks.
+    # This avoids relying on the planner when a query contains QC keywords.
+    if "commodity" in ql or "commodities" in ql or "top commodities" in ql:
+        plan_steps.append({"action": "commodity_stats", "args": {"limit": 15}, "why": "User asked for commodity breakdown/top commodities."})
+    if "region" in ql or "regions" in ql or "by region" in ql:
+        plan_steps.append({"action": "stats_by_region", "args": {"limit": 20}, "why": "User asked for counts by region."})
+    if "importance" in ql:
+        plan_steps.append({"action": "importance_breakdown", "args": {}, "why": "User asked for importance breakdown."})
+    if "heatmap" in ql or "density" in ql or "hotspot" in ql:
+        plan_steps.append({"action": "heatmap_bins", "args": {"bin_km": 50.0, "limit": 4000}, "why": "User asked for a spatial density/heatmap view."})
+
+    # File-driven GIS toolbox ops (FeatureCollection based)
+    if uploaded_fc is not None:
+        if "dissolve" in ql:
+            # best guess: common field names
+            by_prop = "group" if "group" in ql else "name" if "name" in ql else "id"
+            plan_steps.append({"action": "spatial_dissolve", "args": {"feature_collection_ref": "uploaded", "by_property": by_prop}, "why": "User requested dissolve on uploaded features."})
+        if "spatial join" in ql or "join" in ql and ("count" in ql or "counts" in ql):
+            plan_steps.append({"action": "spatial_join_mods_counts", "args": {"feature_collection_ref": "uploaded", "predicate": "intersects", "id_property": "id"}, "why": "User requested counts per polygon (spatial join)."})
+        if "nearest join" in ql or ("join" in ql and "nearest" in ql):
+            plan_steps.append({"action": "spatial_join_mods_nearest", "args": {"feature_collection_ref": "uploaded", "id_property": "id"}, "why": "User requested nearest join to MODS."})
+        if ("overlay" in ql or "intersection" in ql or "union" in ql or "difference" in ql) and isinstance(uploaded_fc, dict):
+            # If the uploaded FC contains >=2 geometries, overlay them.
+            op = "intersection"
+            if "union" in ql:
+                op = "union"
+            elif "difference" in ql:
+                op = "difference"
+            elif "symmetric" in ql:
+                op = "symmetric_difference"
+            plan_steps.append({"action": "spatial_overlay", "args": {"op": op, "feature_collection_ref": "uploaded", "a_index": 0, "b_index": 1}, "why": "User requested an overlay operation between uploaded geometries."})
 
     # If no deterministic plan, ask LLM to propose one.
     if not plan_steps and use_llm:
@@ -1025,6 +1071,24 @@ def run_workflow(
             raise ValueError("QC is disabled by data governance policy.")
         if action.startswith("spatial_") and not feature_enabled("spatial"):
             raise ValueError("Spatial operations are disabled by data governance policy.")
+        if action.startswith("rasters_") and not feature_enabled("rasters"):
+            raise ValueError("Raster endpoints are disabled by data governance policy.")
+
+        def _resolve_uploaded_fc() -> Optional[Dict[str, Any]]:
+            try:
+                from app.services.request_context import get_uploaded_feature_collection
+
+                return get_uploaded_feature_collection()
+            except Exception:
+                return None
+
+        def _resolve_uploaded_geom() -> Optional[Dict[str, Any]]:
+            try:
+                from app.services.request_context import get_uploaded_geometry
+
+                return get_uploaded_geometry()
+            except Exception:
+                return None
 
         if action == "qc_summary":
             rep = _tool_qc_summary(db)
@@ -1055,6 +1119,172 @@ def run_workflow(
             rows = _tool_spatial_nearest(db, **args)
             artifacts["spatial_nearest"] = rows
             tool_trace.append({"tool": action, "args": args, "results_count": len(rows)})
+        elif action == "spatial_overlay":
+            fc = None
+            if args.get("feature_collection_ref") == "uploaded":
+                fc = _resolve_uploaded_fc()
+            a = args.get("a")
+            b = args.get("b")
+            if (a is None or b is None) and isinstance(fc, dict):
+                feats = fc.get("features") if isinstance(fc.get("features"), list) else []
+                ai = _clamp_int(args.get("a_index"), 0, 999999, 0)
+                bi = _clamp_int(args.get("b_index"), 0, 999999, 1)
+                try:
+                    a = (feats[ai] or {}).get("geometry")
+                    b = (feats[bi] or {}).get("geometry")
+                except Exception:
+                    a = None
+                    b = None
+            if not isinstance(a, dict) or not isinstance(b, dict):
+                raise ValueError("spatial_overlay requires geometries a and b (or an uploaded FeatureCollection with >=2 features).")
+            op = str(args.get("op") or "intersection")
+            ga = shapely_shape(a)
+            gb = shapely_shape(b)
+            if op == "union":
+                out = ga.union(gb)
+            elif op == "intersection":
+                out = ga.intersection(gb)
+            elif op == "difference":
+                out = ga.difference(gb)
+            elif op == "symmetric_difference":
+                out = ga.symmetric_difference(gb)
+            else:
+                raise ValueError(f"Unsupported overlay op: {op}")
+            artifacts["overlay_geometry"] = shapely_mapping(out)
+            tool_trace.append({"tool": action, "args": args})
+        elif action == "spatial_dissolve":
+            fc = args.get("feature_collection")
+            if args.get("feature_collection_ref") == "uploaded":
+                fc = _resolve_uploaded_fc()
+            if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+                raise ValueError("spatial_dissolve requires a GeoJSON FeatureCollection.")
+            by_prop = str(args.get("by_property") or "").strip()
+            if not by_prop:
+                raise ValueError("spatial_dissolve requires by_property.")
+            feats = fc.get("features") if isinstance(fc.get("features"), list) else []
+            groups: Dict[str, List[Any]] = {}
+            for f in feats[:50000]:
+                if not isinstance(f, dict) or f.get("type") != "Feature":
+                    continue
+                geom = f.get("geometry")
+                props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+                if not isinstance(geom, dict) or "type" not in geom:
+                    continue
+                key = props.get(by_prop)
+                k = str(key if key is not None else "(null)")
+                try:
+                    groups.setdefault(k, []).append(shapely_shape(geom))
+                except Exception:
+                    continue
+            out_features: List[Dict[str, Any]] = []
+            for k, shapes in groups.items():
+                if not shapes:
+                    continue
+                merged = unary_union(shapes)
+                out_features.append({"type": "Feature", "geometry": shapely_mapping(merged), "properties": {by_prop: k, "feature_count": len(shapes)}})
+            artifacts["dissolved_feature_collection"] = {"type": "FeatureCollection", "features": out_features}
+            tool_trace.append({"tool": action, "args": {"by_property": by_prop}, "features_count": len(out_features)})
+        elif action == "spatial_join_mods_counts":
+            fc = args.get("feature_collection")
+            if args.get("feature_collection_ref") == "uploaded":
+                fc = _resolve_uploaded_fc()
+            if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+                raise ValueError("spatial_join_mods_counts requires a GeoJSON FeatureCollection.")
+            predicate = str(args.get("predicate") or "intersects")
+            id_prop = str(args.get("id_property") or "id")
+            feats = fc.get("features") if isinstance(fc.get("features"), list) else []
+            out_feats: List[Dict[str, Any]] = []
+            pt_geom_4326 = cast(MODSOccurrence.geom, Geometry(geometry_type="POINT", srid=4326))
+            for f in feats[:5000]:
+                if not isinstance(f, dict) or f.get("type") != "Feature":
+                    continue
+                geom = f.get("geometry")
+                if not isinstance(geom, dict) or "type" not in geom:
+                    continue
+                props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+                poly_4326 = ST_SetSRID(ST_GeomFromGeoJSON(json.dumps(geom)), 4326)
+                q = db.query(func.count(MODSOccurrence.id))
+                if predicate == "contains":
+                    q = q.filter(func.ST_Contains(poly_4326, pt_geom_4326))
+                else:
+                    q = q.filter(func.ST_Intersects(pt_geom_4326, poly_4326))
+                count_val = int(q.scalar() or 0)
+                props_out = dict(props)
+                props_out["mods_count"] = count_val
+                props_out.setdefault(id_prop, props.get(id_prop))
+                out_feats.append({"type": "Feature", "geometry": geom, "properties": props_out})
+            artifacts["join_counts_feature_collection"] = {"type": "FeatureCollection", "features": out_feats}
+            tool_trace.append({"tool": action, "args": {"predicate": predicate}, "features_count": len(out_feats)})
+        elif action == "spatial_join_mods_nearest":
+            fc = args.get("feature_collection")
+            if args.get("feature_collection_ref") == "uploaded":
+                fc = _resolve_uploaded_fc()
+            if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+                raise ValueError("spatial_join_mods_nearest requires a GeoJSON FeatureCollection.")
+            id_prop = str(args.get("id_property") or "id")
+            feats = fc.get("features") if isinstance(fc.get("features"), list) else []
+            pt_geom_4326 = cast(MODSOccurrence.geom, Geometry(geometry_type="POINT", srid=4326))
+            pt_3857 = ST_Transform(pt_geom_4326, 3857)
+            out_rows: List[Dict[str, Any]] = []
+            for f in feats[:5000]:
+                if not isinstance(f, dict) or f.get("type") != "Feature":
+                    continue
+                geom = f.get("geometry")
+                if not isinstance(geom, dict) or "type" not in geom:
+                    continue
+                props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+                fid = props.get(id_prop)
+                geom_4326 = ST_SetSRID(ST_GeomFromGeoJSON(json.dumps(geom)), 4326)
+                geom_3857 = ST_Transform(geom_4326, 3857)
+                dist_m = ST_Distance(pt_3857, geom_3857).label("distance_m")
+                row = db.query(MODSOccurrence, dist_m).order_by(dist_m.asc()).limit(1).first()
+                if not row:
+                    out_rows.append({"feature_id": fid, "distance_m": None, "nearest": None})
+                    continue
+                occ, d = row
+                out_rows.append({"feature_id": fid, "distance_m": float(d) if d is not None else None, "nearest": _to_occurrence_info(occ).model_dump()})
+            artifacts["join_nearest_results"] = out_rows
+            tool_trace.append({"tool": action, "args": {"id_property": id_prop}, "results_count": len(out_rows)})
+        elif action == "rasters_zonal_stats":
+            raster_id = str(args.get("raster_id") or "").strip()
+            if not raster_id:
+                raise ValueError("rasters_zonal_stats requires raster_id")
+            geom = args.get("geometry")
+            if args.get("geometry_ref") == "uploaded":
+                geom = _resolve_uploaded_geom()
+            if not isinstance(geom, dict) or "type" not in geom:
+                raise ValueError("rasters_zonal_stats requires a GeoJSON geometry (or geometry_ref='uploaded').")
+            band = _clamp_int(args.get("band"), 1, 1000, 1)
+            # Call same logic as rasters router (inline, to avoid HTTP hop)
+            from app.services.raster_service import RASTERS_DIR
+            import numpy as np
+            import rasterio
+            from rasterio.mask import mask
+            from rasterio.warp import transform_geom
+
+            d = RASTERS_DIR / raster_id
+            files = [p for p in d.iterdir() if p.is_file()] if d.exists() else []
+            if not files:
+                raise ValueError("Raster not found")
+            path = files[0]
+            with rasterio.open(path) as ds:
+                g2 = geom
+                if ds.crs and str(ds.crs).upper() not in ("EPSG:4326", "WGS84"):
+                    g2 = transform_geom("EPSG:4326", ds.crs, g2, precision=6)
+                out, _ = mask(ds, [g2], crop=True, filled=False)
+                if band < 1 or band > ds.count:
+                    raise ValueError(f"Invalid band={band}. Raster has {ds.count} band(s).")
+                arr = out[band - 1]
+                data = np.asarray(arr)
+                mask_arr = np.ma.getmaskarray(arr)
+                valid = data[~mask_arr]
+                if valid.size == 0:
+                    stats: Dict[str, Any] = {"count": 0, "min": None, "max": None, "mean": None, "std": None}
+                else:
+                    stats = {"count": int(valid.size), "min": float(np.min(valid)), "max": float(np.max(valid)), "mean": float(np.mean(valid)), "std": float(np.std(valid))}
+            artifacts.setdefault("zonal_stats", [])
+            artifacts["zonal_stats"].append({"raster_id": raster_id, "band": band, "stats": stats})
+            tool_trace.append({"tool": action, "args": {"raster_id": raster_id, "band": band}, "raw": {"stats": stats}})
         elif action == "ogc_items_link":
             url = _tool_ogc_items_link(args)
             artifacts["ogc_items_url"] = url
@@ -1180,6 +1410,27 @@ def run_workflow(
             + "Mention any QGIS-ready links in tool_outputs (ogc_items_url) and where to find outputs."
         )
         answer = generate_response(final_prompt)
+        # If the LLM timed out or errored, fall back to a deterministic summary
+        # so the user still gets a useful “human-facing” response.
+        if isinstance(answer, str) and (answer.startswith("LLM call timed out") or answer.startswith("LLM error")):
+            bits: List[str] = [
+                "LLM summary was unavailable, so here is an automatic summary of the computed results:"
+            ]
+            if artifacts.get("qc_summary"):
+                bits.append(f"- QC summary: {json.dumps(artifacts['qc_summary'], ensure_ascii=False)}")
+            if artifacts.get("commodity_stats"):
+                bits.append(f"- Top commodities rows: {len(artifacts.get('commodity_stats') or [])}")
+            if artifacts.get("stats_by_region"):
+                bits.append(f"- Regions rows: {len(artifacts.get('stats_by_region') or [])}")
+            if artifacts.get("importance_breakdown"):
+                bits.append(f"- Importance rows: {len(artifacts.get('importance_breakdown') or [])}")
+            if artifacts.get("heatmap_bins"):
+                bits.append(f"- Heatmap bins: {len(artifacts.get('heatmap_bins') or [])}")
+            if artifacts.get("charts"):
+                bits.append(f"- Charts generated: {len(artifacts.get('charts') or [])} (see artifacts.charts)")
+            if artifacts.get("ogc_items_url"):
+                bits.append(f"- OGC items URL: {artifacts.get('ogc_items_url')}")
+            answer = "\n".join(bits)
     audit_log("workflow_final", {"query": user_query})
     return sanitize_text(answer), plan_steps, tool_trace, last_occurrences, artifacts
     try:

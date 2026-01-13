@@ -257,3 +257,75 @@ class SpatialNearestResponse(BaseModel):
     total_returned: int
     results: List[Dict[str, Any]]
     applied: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SpatialOverlayRequest(BaseModel):
+    """
+    Vector overlay operations on arbitrary GeoJSON geometries (EPSG:4326).
+    """
+
+    op: Literal["union", "intersection", "difference", "symmetric_difference"] = "intersection"
+    a: Dict[str, Any]
+    b: Dict[str, Any]
+
+
+class SpatialOverlayResponse(BaseModel):
+    geojson_geometry: Dict[str, Any]
+    applied: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SpatialDissolveRequest(BaseModel):
+    """
+    Dissolve/merge GeoJSON FeatureCollection by a property key.
+    """
+
+    feature_collection: Dict[str, Any]
+    by_property: str = Field(..., min_length=1)
+    max_features: int = Field(default=5000, ge=1, le=50000)
+
+
+class SpatialDissolveResponse(BaseModel):
+    feature_collection: Dict[str, Any]
+    applied: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SpatialJoinCountsRequest(BaseModel):
+    """
+    Spatial join: count MODS points within/intersecting each polygon feature.
+    """
+
+    feature_collection: Dict[str, Any]
+    predicate: Literal["intersects", "contains"] = "intersects"
+    id_property: str = Field(default="id", min_length=1)
+    max_features: int = Field(default=200, ge=1, le=5000)
+
+
+class SpatialJoinCountsResponse(BaseModel):
+    feature_collection: Dict[str, Any]
+    applied: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SpatialJoinNearestRequest(BaseModel):
+    """
+    Spatial join: for each input feature, find the nearest MODS point and distance.
+    """
+
+    feature_collection: Dict[str, Any]
+    id_property: str = Field(default="id", min_length=1)
+    limit_features: int = Field(default=200, ge=1, le=5000)
+
+
+class SpatialJoinNearestResponse(BaseModel):
+    features: List[Dict[str, Any]]
+    applied: Dict[str, Any] = Field(default_factory=dict)
+
+
+class RasterZonalStatsRequest(BaseModel):
+    geometry: Dict[str, Any]
+    band: int = Field(default=1, ge=1)
+
+
+class RasterZonalStatsResponse(BaseModel):
+    raster_id: str
+    band: int
+    stats: Dict[str, Any]

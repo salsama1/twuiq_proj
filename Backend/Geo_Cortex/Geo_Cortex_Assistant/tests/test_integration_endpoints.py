@@ -115,6 +115,56 @@ def test_spatial_nearest():
     assert "results" in j
 
 
+def test_spatial_overlay():
+    poly_a = {
+        "type": "Polygon",
+        "coordinates": [[[46.0, 24.0], [47.5, 24.0], [47.5, 25.5], [46.0, 25.5], [46.0, 24.0]]],
+    }
+    poly_b = {
+        "type": "Polygon",
+        "coordinates": [[[47.0, 24.7], [48.2, 24.7], [48.2, 26.0], [47.0, 26.0], [47.0, 24.7]]],
+    }
+    r = _req("POST", "/spatial/overlay", {"op": "intersection", "a": poly_a, "b": poly_b})
+    assert 200 <= r.status_code < 300, r.text[:500]
+    j = r.json()
+    assert "geojson_geometry" in j
+
+
+def test_spatial_dissolve():
+    dissolve_fc = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": {"id": 1, "group": "A"}, "geometry": {"type": "Polygon", "coordinates": [[[46.0, 24.0], [46.8, 24.0], [46.8, 24.8], [46.0, 24.8], [46.0, 24.0]]]}},
+            {"type": "Feature", "properties": {"id": 2, "group": "A"}, "geometry": {"type": "Polygon", "coordinates": [[[46.6, 24.6], [47.4, 24.6], [47.4, 25.4], [46.6, 25.4], [46.6, 24.6]]]}},
+            {"type": "Feature", "properties": {"id": 3, "group": "B"}, "geometry": {"type": "Polygon", "coordinates": [[[47.6, 24.2], [48.2, 24.2], [48.2, 24.8], [47.6, 24.8], [47.6, 24.2]]]}},
+        ],
+    }
+    r = _req("POST", "/spatial/dissolve", {"feature_collection": dissolve_fc, "by_property": "group"})
+    assert 200 <= r.status_code < 300, r.text[:500]
+    j = r.json()
+    assert j.get("feature_collection", {}).get("type") == "FeatureCollection"
+
+
+def test_spatial_join_counts_and_nearest():
+    join_fc = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": {"id": "poly_1"}, "geometry": {"type": "Polygon", "coordinates": [[[44.0, 22.0], [45.2, 22.0], [45.2, 23.2], [44.0, 23.2], [44.0, 22.0]]]}},
+            {"type": "Feature", "properties": {"id": "poly_2"}, "geometry": {"type": "Polygon", "coordinates": [[[46.0, 24.0], [47.0, 24.0], [47.0, 25.0], [46.0, 25.0], [46.0, 24.0]]]}},
+        ],
+    }
+    r = _req("POST", "/spatial/join/mods/counts", {"feature_collection": join_fc, "predicate": "intersects", "id_property": "id"})
+    assert 200 <= r.status_code < 300, r.text[:500]
+    j = r.json()
+    feats = j.get("feature_collection", {}).get("features", [])
+    assert isinstance(feats, list) and len(feats) >= 1
+
+    r = _req("POST", "/spatial/join/mods/nearest", {"feature_collection": join_fc, "id_property": "id"})
+    assert 200 <= r.status_code < 300, r.text[:500]
+    j2 = r.json()
+    assert "features" in j2
+
+
 def test_files_parse_geojson():
     sample_geojson = b'{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[46.6753,24.7136]},\"properties\":{\"name\":\"p1\"}}]}'
     files = {"file": ("sample.geojson", sample_geojson, "application/geo+json")}

@@ -13,7 +13,7 @@ from app.services.chat_store import (
     set_state_value_db,
 )
 from app.services.geofile_service import parse_geofile, featurecollection_to_union_geometry
-from app.services.request_context import set_uploaded_geometry
+from app.services.request_context import set_uploaded_geometry, set_uploaded_feature_collection
 from uuid import uuid4
 
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -75,7 +75,9 @@ async def agent_with_file(
         fc = parse_geofile(file.filename or "", file.content_type, data)
         union_geom = featurecollection_to_union_geometry(fc)
         set_uploaded_geometry(union_geom)
+        set_uploaded_feature_collection(fc)
         set_state_value_db(db, sid, "last_aoi_geometry", union_geom)
+        set_state_value_db(db, sid, "last_uploaded_fc", fc)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse file: {e}")
 
@@ -110,6 +112,9 @@ async def agent_workflow(request: WorkflowRequest, db: db_dependency):
     last_aoi = get_state_value_db(db, session_id, "last_aoi_geometry")
     if isinstance(last_aoi, dict) and last_aoi.get("type"):
         set_uploaded_geometry(last_aoi)
+    last_fc = get_state_value_db(db, session_id, "last_uploaded_fc")
+    if isinstance(last_fc, dict) and last_fc.get("type") == "FeatureCollection":
+        set_uploaded_feature_collection(last_fc)
 
     answer, plan, trace, occs, artifacts = run_workflow(
         db,
@@ -157,7 +162,9 @@ async def agent_workflow_with_file(
         fc = parse_geofile(file.filename or "", file.content_type, data)
         union_geom = featurecollection_to_union_geometry(fc)
         set_uploaded_geometry(union_geom)
+        set_uploaded_feature_collection(fc)
         set_state_value_db(db, sid, "last_aoi_geometry", union_geom)
+        set_state_value_db(db, sid, "last_uploaded_fc", fc)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse file: {e}")
 

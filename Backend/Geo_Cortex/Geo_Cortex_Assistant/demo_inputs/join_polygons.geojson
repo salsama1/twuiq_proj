@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "poly_1", "name": "Polygon 1" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[44.0, 22.0], [45.2, 22.0], [45.2, 23.2], [44.0, 23.2], [44.0, 22.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "poly_2", "name": "Polygon 2" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[46.0, 24.0], [47.0, 24.0], [47.0, 25.0], [46.0, 25.0], [46.0, 24.0]]]
+      }
+    }
+  ]
+}
+

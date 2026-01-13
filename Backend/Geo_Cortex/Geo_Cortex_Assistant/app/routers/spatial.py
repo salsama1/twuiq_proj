@@ -20,8 +20,19 @@ from app.models.schemas import (
     SpatialNearestResponse,
     SpatialQueryRequest,
     SpatialQueryResponse,
+    SpatialOverlayRequest,
+    SpatialOverlayResponse,
+    SpatialDissolveRequest,
+    SpatialDissolveResponse,
+    SpatialJoinCountsRequest,
+    SpatialJoinCountsResponse,
+    SpatialJoinNearestRequest,
+    SpatialJoinNearestResponse,
 )
 from app.services.governance import audit_log, feature_enabled
+
+from shapely.geometry import shape as shapely_shape, mapping as shapely_mapping
+from shapely.ops import unary_union
 
 
 router = APIRouter(prefix="/spatial", tags=["spatial"])
@@ -251,4 +262,195 @@ async def spatial_nearest(req: SpatialNearestRequest, db: Session = Depends(get_
 
     audit_log("spatial_nearest", {"limit": req.limit, "returned": len(out)})
     return SpatialNearestResponse(total_returned=len(out), results=out, applied=req.model_dump(exclude_none=True))
+
+
+@router.post("/overlay", response_model=SpatialOverlayResponse)
+async def spatial_overlay(req: SpatialOverlayRequest):
+    """
+    Vector overlay operations on GeoJSON geometries (no DB required).
+    op: union | intersection | difference | symmetric_difference
+    """
+    if not feature_enabled("spatial"):
+        raise HTTPException(status_code=403, detail="Spatial operations are disabled by data governance policy.")
+    if not isinstance(req.a, dict) or "type" not in req.a:
+        raise HTTPException(status_code=400, detail="a must be a GeoJSON geometry object")
+    if not isinstance(req.b, dict) or "type" not in req.b:
+        raise HTTPException(status_code=400, detail="b must be a GeoJSON geometry object")
+
+    try:
+        ga = shapely_shape(req.a)
+        gb = shapely_shape(req.b)
+        if req.op == "union":
+            out = ga.union(gb)
+        elif req.op == "intersection":
+            out = ga.intersection(gb)
+        elif req.op == "difference":
+            out = ga.difference(gb)
+        elif req.op == "symmetric_difference":
+            out = ga.symmetric_difference(gb)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported op: {req.op}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Overlay failed: {e}")
+
+    geom_out: Dict[str, Any] = shapely_mapping(out)
+    audit_log("spatial_overlay", {"op": req.op})
+    return SpatialOverlayResponse(geojson_geometry=geom_out, applied=req.model_dump(exclude_none=True))
+
+
+@router.post("/dissolve", response_model=SpatialDissolveResponse)
+async def spatial_dissolve(req: SpatialDissolveRequest):
+    """
+    Dissolve FeatureCollection by a property key. Returns a new FeatureCollection
+    with one feature per unique property value.
+    """
+    if not feature_enabled("spatial"):
+        raise HTTPException(status_code=403, detail="Spatial operations are disabled by data governance policy.")
+    fc = req.feature_collection
+    if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+        raise HTTPException(status_code=400, detail="feature_collection must be a GeoJSON FeatureCollection")
+    feats = fc.get("features")
+    if not isinstance(feats, list):
+        raise HTTPException(status_code=400, detail="feature_collection.features must be a list")
+    feats = feats[: req.max_features]
+
+    groups: Dict[str, List[Any]] = {}
+    for f in feats:
+        if not isinstance(f, dict) or f.get("type") != "Feature":
+            continue
+        geom = f.get("geometry")
+        props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+        if not isinstance(geom, dict) or "type" not in geom:
+            continue
+        key = props.get(req.by_property)
+        if key is None:
+            key = "(null)"
+        k = str(key)
+        try:
+            groups.setdefault(k, []).append(shapely_shape(geom))
+        except Exception:
+            continue
+
+    out_features: List[Dict[str, Any]] = []
+    for k, shapes in groups.items():
+        if not shapes:
+            continue
+        merged = unary_union(shapes)
+        out_features.append(
+            {
+                "type": "Feature",
+                "geometry": shapely_mapping(merged),
+                "properties": {req.by_property: k, "feature_count": len(shapes)},
+            }
+        )
+
+    out_fc = {"type": "FeatureCollection", "features": out_features}
+    audit_log("spatial_dissolve", {"by_property": req.by_property, "groups": len(out_features)})
+    return SpatialDissolveResponse(feature_collection=out_fc, applied=req.model_dump(exclude_none=True))
+
+
+@router.post("/join/mods/counts", response_model=SpatialJoinCountsResponse)
+async def spatial_join_mods_counts(req: SpatialJoinCountsRequest, db: Session = Depends(get_db)):
+    """
+    Spatial join: for each polygon feature in the input FeatureCollection,
+    count MODS points intersecting it, and return a FeatureCollection with the
+    same features plus a `mods_count` property.
+    """
+    if not feature_enabled("spatial"):
+        raise HTTPException(status_code=403, detail="Spatial operations are disabled by data governance policy.")
+    fc = req.feature_collection
+    if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+        raise HTTPException(status_code=400, detail="feature_collection must be a GeoJSON FeatureCollection")
+    feats = fc.get("features")
+    if not isinstance(feats, list):
+        raise HTTPException(status_code=400, detail="feature_collection.features must be a list")
+    feats = feats[: req.max_features]
+
+    out_features: List[Dict[str, Any]] = []
+    pt_geom_4326 = cast(MODSOccurrence.geom, Geometry(geometry_type="POINT", srid=4326))
+
+    for f in feats:
+        if not isinstance(f, dict) or f.get("type") != "Feature":
+            continue
+        geom = f.get("geometry")
+        if not isinstance(geom, dict) or "type" not in geom:
+            continue
+        props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+
+        try:
+            poly_4326 = ST_SetSRID(ST_GeomFromGeoJSON(json.dumps(geom)), 4326)
+        except Exception:
+            continue
+
+        q = db.query(func.count(MODSOccurrence.id))
+        if req.predicate == "contains":
+            q = q.filter(func.ST_Contains(poly_4326, pt_geom_4326))
+        else:
+            q = q.filter(func.ST_Intersects(pt_geom_4326, poly_4326))
+
+        count_val = int(q.scalar() or 0)
+        props_out = dict(props)
+        props_out["mods_count"] = count_val
+        props_out.setdefault(req.id_property, props.get(req.id_property))
+
+        out_features.append({"type": "Feature", "geometry": geom, "properties": props_out})
+
+    out_fc = {"type": "FeatureCollection", "features": out_features}
+    audit_log("spatial_join_mods_counts", {"predicate": req.predicate, "features": len(out_features)})
+    return SpatialJoinCountsResponse(feature_collection=out_fc, applied=req.model_dump(exclude_none=True))
+
+
+@router.post("/join/mods/nearest", response_model=SpatialJoinNearestResponse)
+async def spatial_join_mods_nearest(req: SpatialJoinNearestRequest, db: Session = Depends(get_db)):
+    """
+    Spatial join: for each input feature, compute the nearest MODS point and distance (meters).
+    Returns a list of results, each containing the input feature id and the nearest occurrence.
+    """
+    if not feature_enabled("spatial"):
+        raise HTTPException(status_code=403, detail="Spatial operations are disabled by data governance policy.")
+    fc = req.feature_collection
+    if not isinstance(fc, dict) or fc.get("type") != "FeatureCollection":
+        raise HTTPException(status_code=400, detail="feature_collection must be a GeoJSON FeatureCollection")
+    feats = fc.get("features")
+    if not isinstance(feats, list):
+        raise HTTPException(status_code=400, detail="feature_collection.features must be a list")
+    feats = feats[: req.limit_features]
+
+    pt_geom_4326 = cast(MODSOccurrence.geom, Geometry(geometry_type="POINT", srid=4326))
+    pt_3857 = ST_Transform(pt_geom_4326, 3857)
+
+    out: List[Dict[str, Any]] = []
+    for f in feats:
+        if not isinstance(f, dict) or f.get("type") != "Feature":
+            continue
+        geom = f.get("geometry")
+        if not isinstance(geom, dict) or "type" not in geom:
+            continue
+        props = f.get("properties") if isinstance(f.get("properties"), dict) else {}
+        fid = props.get(req.id_property)
+
+        try:
+            geom_4326 = ST_SetSRID(ST_GeomFromGeoJSON(json.dumps(geom)), 4326)
+            geom_3857 = ST_Transform(geom_4326, 3857)
+        except Exception:
+            continue
+
+        dist_m = ST_Distance(pt_3857, geom_3857).label("distance_m")
+        row = db.query(MODSOccurrence, dist_m).order_by(dist_m.asc()).limit(1).first()
+        if not row:
+            out.append({"feature_id": fid, "distance_m": None, "nearest": None})
+            continue
+        occ, d = row
+        out.append(
+            {
+                "feature_id": fid,
+                "distance_m": float(d) if d is not None else None,
+                "nearest": _to_occurrence_info(occ).model_dump(),
+            }
+        )
+
+    audit_log("spatial_join_mods_nearest", {"features": len(out)})
+    return SpatialJoinNearestResponse(features=out, applied=req.model_dump(exclude_none=True))
 

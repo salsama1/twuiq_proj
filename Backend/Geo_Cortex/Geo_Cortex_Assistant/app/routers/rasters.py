@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
+from app.models.schemas import RasterZonalStatsRequest, RasterZonalStatsResponse
 from app.services.governance import audit_log, feature_enabled
 from app.services.job_service import create_job, set_job_status
 from app.services.raster_service import (
@@ -140,4 +141,81 @@ async def raster_tile(
 
     audit_log("rasters_tile", {"raster_id": raster_id, "z": z, "x": x, "y": y, "band": band, "bytes": len(png)})
     return Response(content=png, media_type="image/png")
+
+
+@router.post("/{raster_id}/zonal-stats", response_model=RasterZonalStatsResponse)
+async def raster_zonal_stats(
+    raster_id: str,
+    req: RasterZonalStatsRequest,
+):
+    """
+    Zonal statistics for a polygon/geometry over a raster.
+    Geometry is assumed EPSG:4326 and will be reprojected to the raster CRS if needed.
+    Requires optional raster dependencies (rasterio + numpy).
+    """
+    if not feature_enabled("rasters"):
+        raise HTTPException(status_code=403, detail="Raster endpoints are disabled by data governance policy.")
+
+    d = RASTERS_DIR / raster_id
+    files = [p for p in d.iterdir() if p.is_file()] if d.exists() else []
+    if not files:
+        raise HTTPException(status_code=404, detail="Raster not found")
+    path = files[0]
+
+    if not isinstance(req.geometry, dict) or "type" not in req.geometry:
+        raise HTTPException(status_code=400, detail="geometry must be a GeoJSON geometry object")
+
+    try:
+        import numpy as np
+        import rasterio
+        from rasterio.mask import mask
+        from rasterio.warp import transform_geom
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Zonal stats require raster dependencies. Install with: pip install -r requirements-raster.txt "
+                "(on Windows, Conda is often easiest)."
+            ),
+        ) from e
+
+    with rasterio.open(path) as ds:
+        geom = req.geometry
+        if ds.crs and str(ds.crs).upper() not in ("EPSG:4326", "WGS84"):
+            try:
+                geom = transform_geom("EPSG:4326", ds.crs, geom, precision=6)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to reproject geometry to raster CRS: {e}")
+
+        try:
+            out, _ = mask(ds, [geom], crop=True, filled=False)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to mask raster: {e}")
+
+        b = int(req.band)
+        if b < 1 or b > ds.count:
+            raise HTTPException(status_code=400, detail=f"Invalid band={b}. Raster has {ds.count} band(s).")
+
+        arr = out[b - 1]
+        # arr is a masked array if filled=False; handle robustly
+        try:
+            data = np.asarray(arr)
+            mask_arr = np.ma.getmaskarray(arr)
+            valid = data[~mask_arr]
+        except Exception:
+            valid = np.array([])
+
+        if valid.size == 0:
+            stats: Dict[str, Any] = {"count": 0, "min": None, "max": None, "mean": None, "std": None}
+        else:
+            stats = {
+                "count": int(valid.size),
+                "min": float(np.min(valid)),
+                "max": float(np.max(valid)),
+                "mean": float(np.mean(valid)),
+                "std": float(np.std(valid)),
+            }
+
+    audit_log("rasters_zonal_stats", {"raster_id": raster_id, "band": int(req.band), "count": stats.get("count")})
+    return RasterZonalStatsResponse(raster_id=raster_id, band=int(req.band), stats=stats)
 

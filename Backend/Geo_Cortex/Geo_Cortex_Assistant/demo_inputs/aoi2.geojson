@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "aoi2", "name": "AOI 2 (overlaps AOI 1)" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[47.0, 24.7], [48.2, 24.7], [48.2, 26.0], [47.0, 26.0], [47.0, 24.7]]]
+      }
+    }
+  ]
+}
+
