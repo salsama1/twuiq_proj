@@ -10,7 +10,8 @@ This is a practical “how to test the API” guide with **ready-to-run examples
 ### Set `BASE_URL` (PowerShell)
 
 ```powershell
-$env:BASE_URL = "http://127.0.0.1:8000"
+$BASE_URL = "http://127.0.0.1:8000"
+$env:BASE_URL = $BASE_URL
 ```
 
 ### Use `curl.exe` on Windows
@@ -64,15 +65,24 @@ These endpoints return a structured payload containing:
 - **What it does**: “Agentic RAG” — the model can run small tools (search/nearby/count) before answering.
 - **When to use**: Conversational Q&A over the dataset without explicit workflow planning.
 
-```powershell
-$body = @{
-  query = "Show me gold occurrences in Riyadh and summarize patterns."
-  max_steps = 3
-} | ConvertTo-Json
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/agent/" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "query": "string",
+  "max_steps": 3,
+  "session_id": "string"
+}
+```
+
+```powershell
+$body = @'
+{
+  "query": "Show me gold occurrences in Riyadh and summarize patterns.",
+  "max_steps": 3
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/agent/" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /agent/file`
@@ -81,11 +91,7 @@ curl.exe -s -X POST "$env:BASE_URL/agent/" `
 - **When to use**: When your question depends on an AOI polygon/lines/points you provide.
 
 ```powershell
-# Example: pass an AOI file and ask for “nearest occurrences”
-curl.exe -s -X POST "$env:BASE_URL/agent/file" `
-  -F "query=Find the nearest occurrences to this AOI and summarize the top commodities." `
-  -F "max_steps=3" `
-  -F "file=@.\demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/agent/file" -F "query=Find the nearest occurrences to this AOI and summarize the top commodities." -F "max_steps=3" -F "file=@demo_inputs\aoi.geojson"
 ```
 
 ### `POST /agent/workflow`
@@ -93,16 +99,26 @@ curl.exe -s -X POST "$env:BASE_URL/agent/file" `
 - **What it does**: Returns an explicit **plan** (`plan`) and executes it.
 - **When to use**: You want a defensible plan + tool execution trace.
 
-```powershell
-$body = @{
-  query = "Give me QC summary, top commodities, and counts by region."
-  max_steps = 6
-  use_llm = $true
-} | ConvertTo-Json
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/agent/workflow" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "query": "string",
+  "max_steps": 6,
+  "use_llm": true,
+  "session_id": "string"
+}
+```
+
+```powershell
+$body = @'
+{
+  "query": "Give me QC summary, top commodities, and counts by region.",
+  "max_steps": 6,
+  "use_llm": true
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/agent/workflow" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /agent/workflow/file`
@@ -111,11 +127,7 @@ curl.exe -s -X POST "$env:BASE_URL/agent/workflow" `
 - **When to use**: A workflow that depends on uploaded geometry (buffer/overlay/dissolve/joins).
 
 ```powershell
-curl.exe -s -X POST "$env:BASE_URL/agent/workflow/file" `
-  -F "query=Buffer the uploaded AOI by 50km, then return occurrences within the buffer and summarize." `
-  -F "max_steps=6" `
-  -F "use_llm=true" `
-  -F "file=@.\demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/agent/workflow/file" -F "query=Buffer the uploaded AOI by 50km, then return occurrences within the buffer and summarize." -F "max_steps=6" -F "use_llm=true" -F "file=@demo_inputs\aoi.geojson"
 ```
 
 ### `POST /agent/reset?session_id=...`
@@ -142,61 +154,96 @@ All spatial endpoints require a GeoJSON **geometry object** (not a full FeatureC
 - **Useful filters**: `commodity`, `region`, `occurrence_type`, `exploration_status`
 - **Optional**: `return_geojson=true` returns a FeatureCollection of the results
 
-```powershell
-$body = @{
-  op = "intersects"
-  geometry = @{
-    type = "Polygon"
-    coordinates = @(
-      @(
-        @(46.0, 24.0),
-        @(47.0, 24.0),
-        @(47.0, 25.0),
-        @(46.0, 25.0),
-        @(46.0, 24.0)
-      )
-    )
-  }
-  commodity = "Gold"
-  limit = 50
-  offset = 0
-  return_geojson = $true
-} | ConvertTo-Json -Depth 10
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/query" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "op": "intersects",
+  "geometry": { "type": "Polygon", "coordinates": [[[46.0, 24.0], [47.0, 24.0], [47.0, 25.0], [46.0, 25.0], [46.0, 24.0]]] },
+  "commodity": "Gold",
+  "region": "Riyadh",
+  "occurrence_type": "string",
+  "exploration_status": "string",
+  "limit": 50,
+  "offset": 0,
+  "return_geojson": true
+}
+```
+
+```powershell
+$body = @'
+{
+  "op": "intersects",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [46.0, 24.0],
+        [47.0, 24.0],
+        [47.0, 25.0],
+        [46.0, 25.0],
+        [46.0, 24.0]
+      ]
+    ]
+  },
+  "commodity": "Gold",
+  "limit": 50,
+  "offset": 0,
+  "return_geojson": true
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/query" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /spatial/buffer`
 
 - **What it does**: Buffers an input geometry by `distance_m` (meters) and returns the buffer polygon geometry.
 
-```powershell
-$body = @{
-  distance_m = 50000
-  geometry = @{ type="Point"; coordinates=@(46.6753, 24.7136) }
-} | ConvertTo-Json -Depth 10
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/buffer" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "distance_m": 50000,
+  "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] }
+}
+```
+
+```powershell
+$body = @'
+{
+  "distance_m": 50000,
+  "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] }
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/buffer" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /spatial/nearest`
 
 - **What it does**: Finds nearest MODS points to a geometry (distance computed in meters).
 
-```powershell
-$body = @{
-  geometry = @{ type="Point"; coordinates=@(46.6753, 24.7136) }
-  limit = 10
-  commodity = "Gold"
-} | ConvertTo-Json -Depth 10
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/nearest" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] },
+  "limit": 10,
+  "commodity": "Gold",
+  "region": "Riyadh",
+  "occurrence_type": "string",
+  "exploration_status": "string"
+}
+```
+
+```powershell
+$body = @'
+{
+  "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] },
+  "limit": 10,
+  "commodity": "Gold"
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/nearest" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ---
@@ -208,103 +255,167 @@ curl.exe -s -X POST "$env:BASE_URL/spatial/nearest" `
 - **What it does**: Overlay two GeoJSON geometries (no DB needed).
 - **Ops**: `union | intersection | difference | symmetric_difference`
 
-```powershell
-$body = @{
-  op = "intersection"
-  a = @{
-    type="Polygon"
-    coordinates=@(@(@(46,24),@(47,24),@(47,25),@(46,25),@(46,24)))
-  }
-  b = @{
-    type="Polygon"
-    coordinates=@(@(@(46.5,24.5),@(47.5,24.5),@(47.5,25.5),@(46.5,25.5),@(46.5,24.5)))
-  }
-} | ConvertTo-Json -Depth 10
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/overlay" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "op": "intersection",
+  "a": { "type": "Polygon", "coordinates": [[[46, 24], [47, 24], [47, 25], [46, 25], [46, 24]]] },
+  "b": { "type": "Polygon", "coordinates": [[[46.5, 24.5], [47.5, 24.5], [47.5, 25.5], [46.5, 25.5], [46.5, 24.5]]] }
+}
+```
+
+```powershell
+$body = @'
+{
+  "op": "intersection",
+  "a": {
+    "type": "Polygon",
+    "coordinates": [[[46,24],[47,24],[47,25],[46,25],[46,24]]]
+  },
+  "b": {
+    "type": "Polygon",
+    "coordinates": [[[46.5,24.5],[47.5,24.5],[47.5,25.5],[46.5,25.5],[46.5,24.5]]]
+  }
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/overlay" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /spatial/dissolve`
 
 - **What it does**: Dissolve an input **FeatureCollection** by a property key, producing one output feature per unique property value.
 
-```powershell
-$body = @{
-  by_property = "group"
-  max_features = 10000
-  feature_collection = @{
-    type="FeatureCollection"
-    features=@(
-      @{
-        type="Feature"
-        geometry=@{ type="Polygon"; coordinates=@(@(@(46,24),@(47,24),@(47,25),@(46,25),@(46,24))) }
-        properties=@{ group="A"; id=1 }
-      },
-      @{
-        type="Feature"
-        geometry=@{ type="Polygon"; coordinates=@(@(@(47,24),@(48,24),@(48,25),@(47,25),@(47,24))) }
-        properties=@{ group="A"; id=2 }
-      }
-    )
-  }
-} | ConvertTo-Json -Depth 20
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/dissolve" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "by_property": "group",
+  "max_features": 10000,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Polygon", "coordinates": [[[46, 24], [47, 24], [47, 25], [46, 25], [46, 24]]] },
+        "properties": { "group": "A", "id": 1 }
+      }
+    ]
+  }
+}
+```
+
+```powershell
+$body = @'
+{
+  "by_property": "group",
+  "max_features": 10000,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Polygon", "coordinates": [[[46,24],[47,24],[47,25],[46,25],[46,24]]] },
+        "properties": { "group": "A", "id": 1 }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Polygon", "coordinates": [[[47,24],[48,24],[48,25],[47,25],[47,24]]] },
+        "properties": { "group": "A", "id": 2 }
+      }
+    ]
+  }
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/dissolve" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /spatial/join/mods/counts`
 
 - **What it does**: For each polygon feature in the input FeatureCollection, counts intersecting MODS points and adds `mods_count` to properties.
 
-```powershell
-$body = @{
-  predicate = "intersects"   # or "contains"
-  id_property = "id"
-  max_features = 2000
-  feature_collection = @{
-    type="FeatureCollection"
-    features=@(
-      @{
-        type="Feature"
-        geometry=@{ type="Polygon"; coordinates=@(@(@(46,24),@(47,24),@(47,25),@(46,25),@(46,24))) }
-        properties=@{ id="poly-1" }
-      }
-    )
-  }
-} | ConvertTo-Json -Depth 20
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/join/mods/counts" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "predicate": "intersects",
+  "id_property": "id",
+  "max_features": 2000,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Polygon", "coordinates": [[[46, 24], [47, 24], [47, 25], [46, 25], [46, 24]]] },
+        "properties": { "id": "poly-1" }
+      }
+    ]
+  }
+}
+```
+
+```powershell
+$body = @'
+{
+  "predicate": "intersects",
+  "id_property": "id",
+  "max_features": 2000,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Polygon", "coordinates": [[[46,24],[47,24],[47,25],[46,25],[46,24]]] },
+        "properties": { "id": "poly-1" }
+      }
+    ]
+  }
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/join/mods/counts" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ### `POST /spatial/join/mods/nearest`
 
 - **What it does**: For each input feature, finds the nearest MODS point and distance.
 
-```powershell
-$body = @{
-  id_property = "id"
-  limit_features = 200
-  feature_collection = @{
-    type="FeatureCollection"
-    features=@(
-      @{
-        type="Feature"
-        geometry=@{ type="Point"; coordinates=@(46.6753, 24.7136) }
-        properties=@{ id="pt-1" }
-      }
-    )
-  }
-} | ConvertTo-Json -Depth 20
+**Request body (JSON):**
 
-curl.exe -s -X POST "$env:BASE_URL/spatial/join/mods/nearest" `
-  -H "Content-Type: application/json" `
-  -d $body
+```json
+{
+  "id_property": "id",
+  "limit_features": 200,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] },
+        "properties": { "id": "pt-1" }
+      }
+    ]
+  }
+}
+```
+
+```powershell
+$body = @'
+{
+  "id_property": "id",
+  "limit_features": 200,
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] },
+        "properties": { "id": "pt-1" }
+      }
+    ]
+  }
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/spatial/join/mods/nearest" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ---
@@ -341,10 +452,10 @@ curl.exe "$env:BASE_URL/qc/duplicates/coords?limit=200"
 - **Optional bbox params**: `expected_min_lon`, `expected_min_lat`, `expected_max_lon`, `expected_max_lat`
 
 ```powershell
-# No expected bbox
 curl.exe "$env:BASE_URL/qc/outliers?limit=200"
+```
 
-# With “expected bbox” check (example bbox around Saudi Arabia)
+```powershell
 curl.exe "$env:BASE_URL/qc/outliers?limit=200&expected_min_lon=34&expected_min_lat=16&expected_max_lon=56&expected_max_lat=33"
 ```
 
@@ -367,10 +478,10 @@ curl.exe -L "$env:BASE_URL/export/geojson?commodity=Gold&region=Riyadh&limit=500
 - **What it does**: Downloads CSV (supports `stream=true` for large downloads).
 
 ```powershell
-# Non-streaming
 curl.exe -L "$env:BASE_URL/export/csv?commodity=Gold&limit=5000" -o mods_export.csv
+```
 
-# Streaming (recommended for big exports)
+```powershell
 curl.exe -L "$env:BASE_URL/export/csv?commodity=Gold&limit=5000&stream=true" -o mods_export_stream.csv
 ```
 
@@ -468,8 +579,7 @@ curl.exe "$env:BASE_URL/files/formats"
 - **What it does**: Upload a geospatial file and get it normalized as a GeoJSON FeatureCollection + union geometry.
 
 ```powershell
-curl.exe -s -X POST "$env:BASE_URL/files/parse" `
-  -F "file=@.\demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/files/parse" -F "file=@demo_inputs\aoi.geojson"
 ```
 
 ---
@@ -490,8 +600,7 @@ curl.exe "$env:BASE_URL/rasters/formats"
 - **Returns**: `job_id`, plus `status_url` you can poll.
 
 ```powershell
-curl.exe -s -X POST "$env:BASE_URL/rasters/upload" `
-  -F "file=@.\demo_inputs\demo.tif"
+curl.exe -sS -X POST "$env:BASE_URL/rasters/upload" -F "file=@demo_inputs\demo.tif"
 ```
 
 ### `GET /jobs/{job_id}`
@@ -525,19 +634,27 @@ curl.exe "$env:BASE_URL/rasters/$rid/value?lon=46.6753&lat=24.7136&band=1"
 
 - **What it does**: Compute zonal statistics for a polygon/geometry over the raster.
 
+**Request body (JSON):**
+
+```json
+{
+  "band": 1,
+  "geometry": { "type": "Polygon", "coordinates": [[[46.0, 24.0], [47.0, 24.0], [47.0, 25.0], [46.0, 25.0], [46.0, 24.0]]] }
+}
+```
+
 ```powershell
 $rid = "replace-with-raster-id-folder-name"
-$body = @{
-  band = 1
-  geometry = @{
-    type="Polygon"
-    coordinates=@(@(@(46.0,24.0),@(47.0,24.0),@(47.0,25.0),@(46.0,25.0),@(46.0,24.0)))
+$body = @'
+{
+  "band": 1,
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[[46.0,24.0],[47.0,24.0],[47.0,25.0],[46.0,25.0],[46.0,24.0]]]
   }
-} | ConvertTo-Json -Depth 10
-
-curl.exe -s -X POST "$env:BASE_URL/rasters/$rid/zonal-stats" `
-  -H "Content-Type: application/json" `
-  -d $body
+}
+'@
+curl.exe -sS -X POST "$env:BASE_URL/rasters/$rid/zonal-stats" -H "Content-Type: application/json" --data-binary $body
 ```
 
 ---
@@ -554,8 +671,7 @@ curl.exe -s -X POST "$env:BASE_URL/rasters/$rid/zonal-stats" `
   - `rebuild_vectorstore` (default false) — starts embeddings rebuild in background
 
 ```powershell
-curl.exe -s -X POST "$env:BASE_URL/ingest/mods-csv?replace_existing=true&save_as_mods_csv=true&rebuild_vectorstore=false" `
-  -F "file=@.\MODS.csv;type=text/csv"
+curl.exe -sS -X POST "$env:BASE_URL/ingest/mods-csv?replace_existing=true&save_as_mods_csv=true&rebuild_vectorstore=false" -F "file=@MODS.csv;type=text/csv"
 ```
 
 ---
