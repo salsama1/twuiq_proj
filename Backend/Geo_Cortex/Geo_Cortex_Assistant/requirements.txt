@@ -17,3 +17,4 @@ python-multipart
 shapely
 gpxpy
 fastkml
+lxml

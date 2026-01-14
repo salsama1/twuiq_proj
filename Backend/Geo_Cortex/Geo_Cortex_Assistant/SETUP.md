@@ -4,10 +4,19 @@ This guide is the detailed setup reference (environment variables, PostGIS, opti
 
 ### 1) Install dependencies
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+**Recommended (Windows / PowerShell, uses Python 3.12):**
+
+```powershell
+# If you have multiple Pythons installed, prefer 3.12 for best wheel support on Windows.
+py -3.12 -m venv .venv
+.\.venv\Scripts\python -m pip install --upgrade pip
+.\.venv\Scripts\python -m pip install -r requirements.txt
+```
+
+If you already created `.venv`, just reinstall:
+
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
 ### 2) PostgreSQL + PostGIS
@@ -47,30 +56,30 @@ AUDIT_LOG_MAX_FILES=5
 
 ### 4) Load data + embeddings
 
-```bash
-python scripts/load_mods_to_db.py
-python scripts/build_vectorstore.py
+```powershell
+.\.venv\Scripts\python scripts/load_mods_to_db.py
+.\.venv\Scripts\python scripts/build_vectorstore.py
 ```
 
 ### 5) Run the server
 
-```bash
-uvicorn app.main:app --reload --reload-dir "C:\Users\VICTUS\Geo_Cortex\Geo_Cortex_Assistant\app"
+```powershell
+.\.venv\Scripts\python -m uvicorn app.main:app --reload
 ```
 
 ### 6) Tests
 
-```bash
-python scripts/smoke_test.py
-python -m pytest -q
+```powershell
+.\.venv\Scripts\python scripts/smoke_test.py
+.\.venv\Scripts\python -m pytest -q
 ```
 
 ### 7) (Optional) Evaluated accuracy report
 
 This prints golden + holdout metrics and **Wilson 95% lower bounds**:
 
-```bash
-python scripts/report_accuracy_claims.py
+```powershell
+.\.venv\Scripts\python scripts/report_accuracy_claims.py
 ```
 
 ### Optional: enable more file formats (GDAL stack)
@@ -80,8 +89,8 @@ This enables parsing:
 - GeoPackage (`.gpkg`)
 - zipped Shapefile / FileGDB (`.zip`)
 
-```bash
-pip install -r requirements-gdal.txt
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements-gdal.txt
 ```
 
 Check runtime support:
@@ -90,8 +99,8 @@ Check runtime support:
 
 ### Optional: raster workflows (rasterio stack)
 
-```bash
-pip install -r requirements-raster.txt
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements-raster.txt
 ```
 
 Check runtime support:

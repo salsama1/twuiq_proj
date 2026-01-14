@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "name": "transect_line",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "transect_1", "name": "Transect (line) across central KSA" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [44.5, 23.0],
+          [45.5, 23.7],
+          [46.7, 24.7],
+          [47.8, 25.4]
+        ]
+      }
+    }
+  ]
+}
+

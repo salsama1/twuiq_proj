@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "name": "overlay_pair",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "poly_a", "name": "Overlay A", "group": "A" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[46.0, 24.0], [47.6, 24.0], [47.6, 25.6], [46.0, 25.6], [46.0, 24.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "poly_b", "name": "Overlay B (overlaps A)", "group": "B" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[47.0, 24.7], [48.2, 24.7], [48.2, 26.0], [47.0, 26.0], [47.0, 24.7]]]
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "name": "aoi_saudi_bbox",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "saudi_bbox", "name": "Saudi Arabia bbox (approx)" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[34.0, 16.0], [56.0, 16.0], [56.0, 33.0], [34.0, 33.0], [34.0, 16.0]]]
+      }
+    }
+  ]
+}
+

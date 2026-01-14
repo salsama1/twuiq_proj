@@ -20,6 +20,29 @@ PowerShell aliases `curl` to `Invoke-WebRequest`. To avoid surprises, use **`cur
 
 ---
 
+## Demo input files (recommended)
+
+All files live under `Geo_Cortex_Assistant/demo_inputs/` and are designed to let you demo **every major feature** from Swagger UI (`/docs`) without hand-crafting geometries.
+
+- **`aoi1.geojson`**: single polygon AOI (simple). Good for buffers/nearest/intersects and workflow-with-file.
+- **`aoi2.geojson`**: single polygon AOI that overlaps `aoi1` (good for overlay).
+- **`overlay_pair.geojson`**: two polygons in one file (best for “overlay” workflows via `/agent/workflow/file`).
+- **`aoi_saudi_bbox.geojson`**: big bbox polygon (good for “many results” demos + QC + exports).
+- **`dissolve_sample.geojson`**: polygons with `group` property (direct dissolve demo).
+- **`join_polygons.geojson`**: polygons with `id` property (join counts/nearest demos).
+- **`workflow_complex.geojson`**: mixed polygons + points + `group`/`id`/`name` (best “complex workflow” upload).
+- **`points_cities.geojson`**: multiple points (nearest + distance demos).
+- **`transect_line.geojson`**: line feature (buffer + nearest demos).
+- **`demo.tif`**: raster demo file for `/rasters/*`.
+
+If `demo.tif` is missing (or you want to regenerate it):
+
+```powershell
+.\.venv\Scripts\python scripts\generate_demo_raster.py
+```
+
+---
+
 ## Health + metadata
 
 ### `GET /` (root)
@@ -91,7 +114,13 @@ curl.exe -sS -X POST "$env:BASE_URL/agent/" -H "Content-Type: application/json" 
 - **When to use**: When your question depends on an AOI polygon/lines/points you provide.
 
 ```powershell
-curl.exe -sS -X POST "$env:BASE_URL/agent/file" -F "query=Find the nearest occurrences to this AOI and summarize the top commodities." -F "max_steps=3" -F "file=@demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/agent/file" -F "query=Find the nearest occurrences to this AOI and summarize the top commodities." -F "max_steps=3" -F "file=@demo_inputs\aoi1.geojson"
+```
+
+**More complex file demo (uses the mixed file):**
+
+```powershell
+curl.exe -sS -X POST "$env:BASE_URL/agent/file" -F "query=Summarize what this uploaded file contains, then find nearest MODS points to the uploaded points and explain any regional patterns." -F "max_steps=3" -F "file=@demo_inputs\workflow_complex.geojson"
 ```
 
 ### `POST /agent/workflow`
@@ -127,7 +156,19 @@ curl.exe -sS -X POST "$env:BASE_URL/agent/workflow" -H "Content-Type: applicatio
 - **When to use**: A workflow that depends on uploaded geometry (buffer/overlay/dissolve/joins).
 
 ```powershell
-curl.exe -sS -X POST "$env:BASE_URL/agent/workflow/file" -F "query=Buffer the uploaded AOI by 50km, then return occurrences within the buffer and summarize." -F "max_steps=6" -F "use_llm=true" -F "file=@demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/agent/workflow/file" -F "query=Buffer the uploaded AOI by 50km, then return occurrences within the buffer and summarize." -F "max_steps=6" -F "use_llm=true" -F "file=@demo_inputs\aoi1.geojson"
+```
+
+**Complex workflow file demo (overlay + dissolve + join):**
+
+```powershell
+curl.exe -sS -X POST "$env:BASE_URL/agent/workflow/file" -F "query=Overlay the first two polygons as intersection, then dissolve the uploaded polygons by group, then do a spatial join count of MODS points per dissolved polygon, then summarize top commodities and regions." -F "max_steps=8" -F "use_llm=false" -F "file=@demo_inputs\overlay_pair.geojson"
+```
+
+**Complex workflow file demo (mixed geometry + charts):**
+
+```powershell
+curl.exe -sS -X POST "$env:BASE_URL/agent/workflow/file" -F "query=Dissolve by group, then compute MODS counts per polygon (spatial join), then run QC summary and show top commodities and counts by region and include a heatmap description if available." -F "max_steps=10" -F "use_llm=false" -F "file=@demo_inputs\workflow_complex.geojson"
 ```
 
 ### `POST /agent/reset?session_id=...`
@@ -579,7 +620,7 @@ curl.exe "$env:BASE_URL/files/formats"
 - **What it does**: Upload a geospatial file and get it normalized as a GeoJSON FeatureCollection + union geometry.
 
 ```powershell
-curl.exe -sS -X POST "$env:BASE_URL/files/parse" -F "file=@demo_inputs\aoi.geojson"
+curl.exe -sS -X POST "$env:BASE_URL/files/parse" -F "file=@demo_inputs\\workflow_complex.geojson"
 ```
 
 ---
@@ -626,8 +667,8 @@ curl.exe -L "$env:BASE_URL/rasters/$rid/tiles/6/35/24.png?band=1" -o raster_tile
 - **What it does**: Sample a raster value at a lon/lat (EPSG:4326).
 
 ```powershell
-$rid = "replace-with-raster-id-folder-name"
-curl.exe "$env:BASE_URL/rasters/$rid/value?lon=46.6753&lat=24.7136&band=1"
+$rid = "replace-with-raster-id (use job_id returned by /rasters/upload)"
+curl.exe "$env:BASE_URL/rasters/$rid/value?lon=44.55&lat=25.55&band=1"
 ```
 
 ### `POST /rasters/{raster_id}/zonal-stats`
@@ -639,18 +680,18 @@ curl.exe "$env:BASE_URL/rasters/$rid/value?lon=46.6753&lat=24.7136&band=1"
 ```json
 {
   "band": 1,
-  "geometry": { "type": "Polygon", "coordinates": [[[46.0, 24.0], [47.0, 24.0], [47.0, 25.0], [46.0, 25.0], [46.0, 24.0]]] }
+  "geometry": { "type": "Polygon", "coordinates": [[[44.1, 25.1], [44.6, 25.1], [44.6, 25.6], [44.1, 25.6], [44.1, 25.1]]] }
 }
 ```
 
 ```powershell
-$rid = "replace-with-raster-id-folder-name"
+$rid = "replace-with-raster-id (use job_id returned by /rasters/upload)"
 $body = @'
 {
   "band": 1,
   "geometry": {
     "type": "Polygon",
-    "coordinates": [[[46.0,24.0],[47.0,24.0],[47.0,25.0],[46.0,25.0],[46.0,24.0]]]
+    "coordinates": [[[44.1,25.1],[44.6,25.1],[44.6,25.6],[44.1,25.6],[44.1,25.1]]]
   }
 }
 '@

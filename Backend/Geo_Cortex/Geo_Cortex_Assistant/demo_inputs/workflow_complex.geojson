@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "name": "workflow_complex",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "zone_a1", "group": "A", "name": "Zone A1" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[46.0, 24.0], [46.8, 24.0], [46.8, 24.8], [46.0, 24.8], [46.0, 24.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "zone_a2", "group": "A", "name": "Zone A2 (overlaps A1)" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[46.6, 24.6], [47.4, 24.6], [47.4, 25.4], [46.6, 25.4], [46.6, 24.6]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "zone_b1", "group": "B", "name": "Zone B1" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[47.6, 24.2], [48.3, 24.2], [48.3, 24.9], [47.6, 24.9], [47.6, 24.2]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "zone_c1", "group": "C", "name": "Zone C1 (far west example)" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[39.0, 21.0], [39.6, 21.0], [39.6, 21.6], [39.0, 21.6], [39.0, 21.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pt_riyadh", "group": "points", "name": "Riyadh point" },
+      "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "pt_dammam", "group": "points", "name": "Dammam point" },
+      "geometry": { "type": "Point", "coordinates": [50.1033, 26.4344] }
+    }
+  ]
+}
+

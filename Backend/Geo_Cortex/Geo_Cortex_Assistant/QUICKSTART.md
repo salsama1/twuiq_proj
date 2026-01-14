@@ -10,10 +10,11 @@ This gets the backend running locally and lets you produce a “judge demo” re
 
 ### 1) Create venv + install
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+```powershell
+# If you have multiple Pythons installed, prefer 3.12 for best wheel support on Windows.
+py -3.12 -m venv .venv
+.\.venv\Scripts\python -m pip install --upgrade pip
+.\.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
 ### 2) Create `.env`
@@ -30,15 +31,15 @@ PUBLIC_BASE_URL=http://127.0.0.1:8000
 
 ### 3) Load MODS into PostGIS + build embeddings
 
-```bash
-python scripts/load_mods_to_db.py
-python scripts/build_vectorstore.py
+```powershell
+.\.venv\Scripts\python scripts/load_mods_to_db.py
+.\.venv\Scripts\python scripts/build_vectorstore.py
 ```
 
 ### 4) Run the API
 
-```bash
-uvicorn app.main:app --reload --reload-dir "C:\Users\VICTUS\Geo_Cortex\Geo_Cortex_Assistant\app"
+```powershell
+.\.venv\Scripts\python -m uvicorn app.main:app --reload
 ```
 
 Open Swagger UI:
@@ -76,6 +77,6 @@ If Ollama is not running, use offline mode:
 
 If you want a defensible accuracy number to quote (golden + holdout, Wilson 95% lower bounds):
 
-```bash
-python scripts/report_accuracy_claims.py
+```powershell
+.\.venv\Scripts\python scripts/report_accuracy_claims.py
 ```

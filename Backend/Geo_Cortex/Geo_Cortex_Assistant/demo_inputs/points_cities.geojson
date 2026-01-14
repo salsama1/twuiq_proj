@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "name": "points_cities",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "riyadh", "name": "Riyadh" },
+      "geometry": { "type": "Point", "coordinates": [46.6753, 24.7136] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "jeddah", "name": "Jeddah" },
+      "geometry": { "type": "Point", "coordinates": [39.1925, 21.4858] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "dammam", "name": "Dammam" },
+      "geometry": { "type": "Point", "coordinates": [50.1033, 26.4344] }
+    }
+  ]
+}
+
