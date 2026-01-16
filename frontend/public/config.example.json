@@ -1,0 +1,7 @@
+{
+  "backendUrl": "",
+  "mapbox": {
+    "token": "PASTE_PUBLIC_MAPBOX_TOKEN_HERE",
+    "style": "mapbox://styles/mapbox/dark-v11"
+  }
+}

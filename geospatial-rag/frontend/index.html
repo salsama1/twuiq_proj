@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geospatial RAG - Mining Database Assistant</title>
+    
+    <!-- Mapbox GL JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+    
+    <!-- Deck.gl -->
+    <script src="https://unpkg.com/deck.gl@8.9.33/dist.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🗺️ Geospatial RAG</h1>
+                <p class="subtitle">Mining Database Assistant</p>
+            </div>
+            <div class="header-status">
+                <span id="status-indicator" class="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Chat -->
+            <section class="chat-panel">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            <p>👋 Hello! I'm your geospatial mining database assistant.</p>
+                            <p>Try these queries:</p>
+                            <ul>
+                                <li>🔍 "Find all gold deposits"</li>
+                                <li>🗺️ "Show copper sites"</li>
+                                <li>🏔️ "Show boreholes"</li>
+                                <li>📊 "Count minerals by region"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        placeholder="Ask about mineral occurrences..."
+                        autocomplete="off"
+                    />
+                    <button id="send-btn" class="send-btn">Send</button>
+                </div>
+            </section>
+
+            <!-- Right Panel: Map & Results -->
+            <section class="map-panel">
+                <!-- View Tabs -->
+                <div class="view-tabs">
+                    <button class="tab-btn active" data-view="map2d">🗺️ 2D Map</button>
+                    <button class="tab-btn" data-view="map3d">🏔️ 3D Terrain</button>
+                    <button class="tab-btn" data-view="data">📊 Data Table</button>
+                </div>
+
+                <!-- 2D Map View -->
+                <div id="view-map2d" class="view-container active">
+                    <div id="map2d" class="map-container"></div>
+                    
+                    <!-- Zoom Out Button -->
+                    <button id="zoom-out-2d" class="zoom-out-btn hidden" onclick="map2d.zoomOutToAll()">🔙 Zoom Out</button>
+                    
+                    <!-- Control Panel for 2D -->
+                    <div class="control-panel" id="control-panel-2d">
+                        <div class="control-header">
+                            <span class="control-title">Layer Controls</span>
+                            <span class="point-count" id="point-count-2d">0 points</span>
+                        </div>
+                        
+                        <!-- Layer Type Selector -->
+                        <div class="control-group">
+                            <label>Layer Type</label>
+                            <div class="layer-buttons">
+                                <button class="layer-btn active" data-layer="scatter">📍 Scatter</button>
+                                <button class="layer-btn" data-layer="hexagon">⬡ Hexagon</button>
+                                <button class="layer-btn" data-layer="heatmap">🔥 Heatmap</button>
+                            </div>
+                        </div>
+
+                        <!-- Scatter Controls -->
+                        <div class="layer-controls-section" id="scatter-controls">
+                            <div class="control-group">
+                                <label>Radius <span id="scatter-radius-val">8</span>px</label>
+                                <input type="range" id="scatter-radius" min="3" max="30" value="8" />
+                            </div>
+                            <div class="control-group">
+                                <label>Opacity <span id="scatter-opacity-val">80</span>%</label>
+                                <input type="range" id="scatter-opacity" min="10" max="100" value="80" />
+                            </div>
+                        </div>
+
+                        <!-- Hexagon Controls -->
+                        <div class="layer-controls-section hidden" id="hexagon-controls">
+                            <div class="control-group">
+                                <label>Radius <span id="hex-radius-val">20</span>km</label>
+                                <input type="range" id="hex-radius" min="5" max="100" value="20" />
+                            </div>
+                            <div class="control-group">
+                                <label>Coverage <span id="hex-coverage-val">80</span>%</label>
+                                <input type="range" id="hex-coverage" min="20" max="100" value="80" />
+                            </div>
+                            <div class="control-group">
+                                <label>Elevation <span id="hex-elevation-val">100</span></label>
+                                <input type="range" id="hex-elevation" min="0" max="500" value="100" />
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Controls -->
+                        <div class="layer-controls-section hidden" id="heatmap-controls">
+                            <div class="control-group">
+                                <label>Intensity <span id="heat-intensity-val">1.0</span></label>
+                                <input type="range" id="heat-intensity" min="1" max="50" value="10" />
+                            </div>
+                            <div class="control-group">
+                                <label>Radius <span id="heat-radius-val">30</span>px</label>
+                                <input type="range" id="heat-radius" min="10" max="100" value="30" />
+                            </div>
+                            <div class="control-group">
+                                <label>Threshold <span id="heat-threshold-val">0.05</span></label>
+                                <input type="range" id="heat-threshold" min="1" max="50" value="5" />
+                            </div>
+                        </div>
+
+                        <!-- Color Legend -->
+                        <div class="color-legend">
+                            <div class="legend-gradient"></div>
+                            <div class="legend-labels">
+                                <span>Fewer</span>
+                                <span>More</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D Map View -->
+                <div id="view-map3d" class="view-container hidden">
+                    <div id="map3d" class="map-container"></div>
+                    
+                    <!-- Zoom Out Button -->
+                    <button id="zoom-out-3d" class="zoom-out-btn hidden">🔙 Zoom Out to All</button>
+                    
+                    <!-- Control Panel for 3D -->
+                    <div class="control-panel" id="control-panel-3d">
+                        <div class="control-header">
+                            <span class="control-title">3D Terrain Controls</span>
+                            <span class="point-count" id="point-count-3d">0 points</span>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>Point Size <span id="col-radius-val">8</span></label>
+                            <input type="range" id="col-radius" min="1000" max="5000" value="2400" />
+                        </div>
+                        <div class="control-group">
+                            <label>Terrain Exaggeration <span id="terrain-exag-val">1.5</span>x</label>
+                            <input type="range" id="terrain-exag" min="10" max="30" value="15" />
+                        </div>
+
+                        <!-- Commodity Legend -->
+                        <div class="commodity-legend">
+                            <div class="legend-title">Commodity Colors</div>
+                            <div class="legend-item"><span class="color-dot" style="background:#FFD700"></span> Gold</div>
+                            <div class="legend-item"><span class="color-dot" style="background:#B87333"></span> Copper</div>
+                            <div class="legend-item"><span class="color-dot" style="background:#C0C0C0"></span> Silver</div>
+                            <div class="legend-item"><span class="color-dot" style="background:#8B4513"></span> Iron</div>
+                            <div class="legend-item"><span class="color-dot" style="background:#E74C3C"></span> Other</div>
+                        </div>
+                        
+                        <div class="control-hint">💡 Click any point to zoom in</div>
+                    </div>
+                </div>
+
+                <!-- Data Table View -->
+                <div id="view-data" class="view-container hidden">
+                    <div class="data-table-container">
+                        <div class="data-header">
+                            <span id="result-count">0 results</span>
+                            <div class="export-buttons">
+                                <button id="export-geojson" class="export-btn">📥 GeoJSON</button>
+                                <button id="export-csv" class="export-btn">📥 CSV</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="data-table">
+                                <thead id="table-header"></thead>
+                                <tbody id="table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div id="loading-overlay" class="loading-overlay hidden">
+                    <div class="spinner"></div>
+                    <p>Processing query...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-info">
+                <span>Visualization: Deck.gl + Mapbox</span>
+            </div>
+            <div class="footer-actions">
+                <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label>API Endpoint</label>
+                    <input type="text" id="api-endpoint" value="http://localhost:8000" />
+                </div>
+                <div class="setting-group">
+                    <label>Mapbox Token</label>
+                    <input type="text" id="mapbox-token" placeholder="pk.eyJ1..." />
+                    <small>Get free token at <a href="https://mapbox.com" target="_blank">mapbox.com</a></small>
+                </div>
+                <div class="setting-group">
+                    <label>Max Results</label>
+                    <input type="number" id="max-results" value="500" min="10" max="5000" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="primary-btn">Save & Reload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/map2d.js"></script>
+    <script src="js/map3d.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

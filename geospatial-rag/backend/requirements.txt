@@ -1,0 +1,43 @@
+# =============================================================================
+# GEOSPATIAL RAG - BACKEND REQUIREMENTS (Windows Compatible)
+# =============================================================================
+# Python 3.10+ compatible
+# =============================================================================
+
+# Web Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Database
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.30
+geoalchemy2>=0.14.0
+
+# Geospatial (use pre-built wheels)
+# Install these via: pip install geopandas
+# It will automatically get compatible versions of shapely, pyproj, fiona
+geopandas>=0.14.0
+
+# LLM Client
+httpx>=0.27.0
+aiohttp>=3.9.0
+
+# Google Cloud (Voice)
+google-cloud-speech>=2.26.0
+google-cloud-texttospeech>=2.16.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+
+# Audio processing
+pydub>=0.25.1
+numpy>=1.26.0
+
+# Export formats
+geojson>=3.1.0
+
+# Async support
+asyncio-throttle>=1.0.2
