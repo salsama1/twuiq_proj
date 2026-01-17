@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAppStore } from "../../store/appStore";
 import type { OccurrenceInfo } from "../../types/api";
 
@@ -204,150 +205,165 @@ export function DataTablePanel() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <div className="panelHeader">
-        <div>
-          <div className="panelTitle">Data Table</div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            Map ↔ table selection sync (click a row or a point)
-          </div>
-        </div>
-        <div className="krow" style={{ gap: 8 }}>
-          <button className="btn" onClick={exportCsv} disabled={rows.length === 0}>
-            Export CSV
-          </button>
-          <button className="btn" onClick={exportGeoJson} disabled={rows.length === 0}>
-            Export GeoJSON
-          </button>
-          <div className="muted" style={{ fontSize: 12 }}>
-            Rows: <b style={{ color: "var(--text)" }}>{rows.length}</b>
-          </div>
-        </div>
-      </div>
-
-      {/* Lightweight chart summary of current results */}
-      <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>
-        <div className="krow" style={{ justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-          <div style={{ fontWeight: 650 }}>Chart</div>
-          <div className="krow" style={{ gap: 8 }}>
-            <span className="muted" style={{ fontSize: 12 }}>
-              {chartData.modeLabel}
-            </span>
-            <select
-              className="input"
-              style={{ height: 34, padding: "6px 10px" }}
-              value={chartMode}
-              onChange={(e) => setChartMode(e.target.value)}
-            >
-              {chartOptions.map((o) => (
-                <option key={o.id} value={o.id} disabled={!o.enabled}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {(!chartData.hasAny) ? (
-          <div className="muted" style={{ fontSize: 12 }}>
-            Ask the agent for results (or a stats query), then the chart will appear here.
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {chartData.items.map((it) => {
-              const w = Math.max(2, Math.round((it.count / chartData.max) * 100));
-              return (
-                <div key={it.label} style={{ display: "grid", gridTemplateColumns: "140px 1fr 40px", gap: 10, alignItems: "center" }}>
-                  <div
-                    title={it.label}
-                    style={{
-                      fontSize: 12,
-                      color: "var(--text)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {it.label}
-                  </div>
-                  <div style={{ height: 10, background: "rgba(255,255,255,0.05)", borderRadius: 999, overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${w}%`,
-                        height: "100%",
-                        background: "linear-gradient(90deg, rgba(59,130,246,0.85), rgba(34,197,94,0.85))",
-                      }}
-                    />
-                  </div>
-                  <div className="muted" style={{ fontSize: 12, textAlign: "right" }}>
-                    {it.count}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div style={{ overflow: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th
-                    key={h.id}
-                    style={{
-                      textAlign: "left",
-                      padding: "10px 12px",
-                      borderBottom: "1px solid var(--border)",
-                      position: "sticky",
-                      top: 0,
-                      background: "var(--panel)",
-                      cursor: h.column.getCanSort() ? "pointer" : "default",
-                    }}
-                    onClick={h.column.getToggleSortingHandler()}
-                  >
-                    {String(h.column.columnDef.header)}
-                    {h.column.getIsSorted() === "asc" ? " ▲" : h.column.getIsSorted() === "desc" ? " ▼" : ""}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((r) => {
-              const o = r.original;
-              // Selected row is driven by the shared `selectedFeatureId`.
-              const isSel = selectedFeatureId != null && String(selectedFeatureId) === String(o.mods_id);
-              return (
-                <tr
-                  key={r.id}
-                  style={{
-                    background: isSel ? "rgba(34,197,94,0.10)" : "transparent",
-                    borderBottom: "1px solid rgba(35,48,71,0.5)",
-                    cursor: "pointer",
-                  }}
-                  // Clicking a row selects the corresponding map feature.
-                  onClick={() => setSelectedFeatureId(o.mods_id)}
+      <PanelGroup direction="vertical" style={{ height: "100%" }}>
+        {/* Chart section (top) */}
+        <Panel defaultSize={40} minSize={20}>
+          <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+            <div className="panelHeader">
+              <div className="panelTitle">Chart</div>
+              <div className="krow" style={{ gap: 8 }}>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  {chartData.modeLabel}
+                </span>
+                <select
+                  className="input"
+                  style={{ height: 34, padding: "6px 10px", width: 220 }}
+                  value={chartMode}
+                  onChange={(e) => setChartMode(e.target.value)}
                 >
-                  {r.getVisibleCells().map((c) => (
-                    <td key={c.id} style={{ padding: "10px 12px", color: "var(--text)" }}>
-                      {String(c.getValue() ?? "")}
-                    </td>
+                  {chartOptions.map((o) => (
+                    <option key={o.id} value={o.id} disabled={!o.enabled}>
+                      {o.label}
+                    </option>
                   ))}
-                </tr>
-              );
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={columns.length} style={{ padding: 14 }} className="muted">
-                  No data loaded yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ padding: "10px 12px", overflow: "auto", flex: 1 }}>
+              {!chartData.hasAny ? (
+                <div className="muted" style={{ fontSize: 12 }}>
+                  Ask the agent for results (or a stats query), then the chart will appear here.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {chartData.items.map((it) => {
+                    const w = Math.max(2, Math.round((it.count / chartData.max) * 100));
+                    return (
+                      <div
+                        key={it.label}
+                        style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) 1fr 52px", gap: 10, alignItems: "center" }}
+                      >
+                        <div
+                          title={it.label}
+                          style={{
+                            fontSize: 12,
+                            color: "var(--text)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {it.label}
+                        </div>
+                        <div style={{ height: 10, background: "rgba(255,255,255,0.05)", borderRadius: 999, overflow: "hidden" }}>
+                          <div
+                            style={{
+                              width: `${w}%`,
+                              height: "100%",
+                              background: "linear-gradient(90deg, rgba(59,130,246,0.85), rgba(34,197,94,0.85))",
+                            }}
+                          />
+                        </div>
+                        <div className="muted" style={{ fontSize: 12, textAlign: "right" }}>
+                          {it.count}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </Panel>
+
+        <PanelResizeHandle className="resizeHandle resizeHandleY" />
+
+        {/* Table section (bottom) */}
+        <Panel defaultSize={60} minSize={30}>
+          <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+            <div className="panelHeader">
+              <div>
+                <div className="panelTitle">Data Table</div>
+                <div className="muted" style={{ fontSize: 12 }}>
+                  Map ↔ table selection sync (click a row or a point)
+                </div>
+              </div>
+              <div className="krow" style={{ gap: 8 }}>
+                <button className="btn" onClick={exportCsv} disabled={rows.length === 0}>
+                  Export CSV
+                </button>
+                <button className="btn" onClick={exportGeoJson} disabled={rows.length === 0}>
+                  Export GeoJSON
+                </button>
+                <div className="muted" style={{ fontSize: 12 }}>
+                  Rows: <b style={{ color: "var(--text)" }}>{rows.length}</b>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ overflow: "auto", flex: 1 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  {table.getHeaderGroups().map((hg) => (
+                    <tr key={hg.id}>
+                      {hg.headers.map((h) => (
+                        <th
+                          key={h.id}
+                          style={{
+                            textAlign: "left",
+                            padding: "10px 12px",
+                            borderBottom: "1px solid var(--border)",
+                            position: "sticky",
+                            top: 0,
+                            background: "var(--panelSolid)",
+                            cursor: h.column.getCanSort() ? "pointer" : "default",
+                            zIndex: 1,
+                          }}
+                          onClick={h.column.getToggleSortingHandler()}
+                        >
+                          {String(h.column.columnDef.header)}
+                          {h.column.getIsSorted() === "asc" ? " ▲" : h.column.getIsSorted() === "desc" ? " ▼" : ""}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((r) => {
+                    const o = r.original;
+                    const isSel = selectedFeatureId != null && String(selectedFeatureId) === String(o.mods_id);
+                    return (
+                      <tr
+                        key={r.id}
+                        style={{
+                          background: isSel ? "rgba(34,197,94,0.10)" : "transparent",
+                          borderBottom: "1px solid rgba(35,48,71,0.5)",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => setSelectedFeatureId(o.mods_id)}
+                      >
+                        {r.getVisibleCells().map((c) => (
+                          <td key={c.id} style={{ padding: "10px 12px", color: "var(--text)" }}>
+                            {String(c.getValue() ?? "")}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                  {rows.length === 0 && (
+                    <tr>
+                      <td colSpan={columns.length} style={{ padding: 14 }} className="muted">
+                        No data loaded yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Panel>
+      </PanelGroup>
     </div>
   );
 }

@@ -18,24 +18,42 @@ function nowId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function scrubAudioUrls(text: string): string {
+  // Safety: never render audio data URLs/base64 in chat output, even if the backend or older UI code includes it.
+  // - Removes any line starting with "Audio:" (case-insensitive)
+  // - Removes any inline data:audio/... tokens if present
+  if (!text) return text;
+  const withoutAudioLines = text.replace(/^\s*audio:\s*.*$/gim, "").trim();
+  const withoutInlineData = withoutAudioLines.replace(/data:audio\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi, "[audio]");
+  return withoutInlineData.trim();
+}
+
 function occurrencesToFc(occurrences: any[]): GeoJSONFeatureCollection {
   return {
     type: "FeatureCollection",
-    features: occurrences.map((o: any) => ({
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [o.longitude, o.latitude] },
-      properties: {
-        id: o.mods_id ?? undefined,
-        mods_id: o.mods_id,
-        english_name: o.english_name,
-        arabic_name: o.arabic_name,
-        major_commodity: o.major_commodity,
-        admin_region: o.admin_region,
-        occurrence_type: o.occurrence_type,
-        exploration_status: o.exploration_status,
-        occurrence_importance: o.occurrence_importance,
-      },
-    })),
+    // Coerce lon/lat to numbers to avoid Mapbox silently dropping invalid coordinates.
+    features: occurrences
+      .map((o: any) => {
+        const lon = typeof o?.longitude === "string" ? Number(o.longitude) : o?.longitude;
+        const lat = typeof o?.latitude === "string" ? Number(o.latitude) : o?.latitude;
+        if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
+        return {
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [lon, lat] as any },
+          properties: {
+            id: o.mods_id ?? undefined,
+            mods_id: o.mods_id,
+            english_name: o.english_name,
+            arabic_name: o.arabic_name,
+            major_commodity: o.major_commodity,
+            admin_region: o.admin_region,
+            occurrence_type: o.occurrence_type,
+            exploration_status: o.exploration_status,
+            occurrence_importance: o.occurrence_importance,
+          },
+        };
+      })
+      .filter(Boolean) as any,
   };
 }
 
@@ -240,7 +258,7 @@ export function ChatPanel({ onCollapse, onExpand }: { onCollapse: () => void; on
       pushMessage({
         id: nowId(),
         role: "assistant",
-        text: resp.response,
+        text: scrubAudioUrls(resp.response),
         createdAt: Date.now(),
         toolTrace: resp.tool_trace,
       });
@@ -275,14 +293,36 @@ export function ChatPanel({ onCollapse, onExpand }: { onCollapse: () => void; on
       const data = JSON.parse(txt);
 
       const ar = data?.arabic_text ?? "";
+      const sttAr = data?.stt_arabic ?? "";
+      const sttEn = data?.stt_english ?? "";
       const en = data?.agent_english ?? "";
       const audio64 = data?.audio_base64 ?? "";
       const audioUrl = audio64 ? `data:audio/mp3;base64,${audio64}` : "";
 
+      // IMPORTANT: voice queries should populate the same UI state as typed queries.
+      // /speech/process now returns { occurrences, artifacts, tool_trace } like /agent/.
+      try {
+        applyAgentArtifacts({
+          response: String(en || ""),
+          tool_trace: (data?.tool_trace ?? null) as any,
+          occurrences: (data?.occurrences ?? null) as any,
+          artifacts: (data?.artifacts ?? null) as any,
+          session_id: null as any,
+        } as AgentResponse);
+      } catch {
+        // If anything is missing/malformed, still show chat + audio.
+      }
+
       pushMessage({
         id: nowId(),
         role: "assistant",
-        text: `${ar}\n\n(English: ${en})${audioUrl ? `\n\nAudio: ${audioUrl}` : ""}`,
+        // IMPORTANT: do not print the audio URL/base64 in chat; just auto-play it.
+        text: scrubAudioUrls(
+          `${ar}` +
+            `${sttAr ? `\n\nTranscript (AR): ${sttAr}` : ""}` +
+            `${!sttAr && sttEn ? `\n\nTranscript (EN): ${sttEn}` : ""}` +
+            `\n\n(English: ${en})`
+        ),
         createdAt: Date.now(),
       });
 
@@ -403,7 +443,7 @@ export function ChatPanel({ onCollapse, onExpand }: { onCollapse: () => void; on
       <div style={{ flex: 1, overflow: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
         {messages.length === 0 && (
           <div className="muted" style={{ fontSize: 13 }}>
-            Try: “Show me gold occurrences near Riyadh within 50km”, or “Create a 10km buffer around my last AOI and list nearest
+            Try: “Show me gold occurrences in Riyadh”, or “Create a 10km buffer around my last AOI and list nearest
             occurrences.”
           </div>
         )}

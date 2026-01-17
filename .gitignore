@@ -1,0 +1,18 @@
+# Local secrets / credentials (do NOT commit)
+.env
+*.env
+winter-agility-484615-e4-db5e59460d40.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+

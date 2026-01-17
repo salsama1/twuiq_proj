@@ -17,12 +17,68 @@ type MapboxAny = any;
 const SOURCE_ID_PREFIX = "gc-src:";
 const LAYER_ID_PREFIX = "gc-lyr:";
 
-function supportsWebGL2OnCanvas(canvas: HTMLCanvasElement): boolean {
+function supportsWebGL2Runtime(): boolean {
+  // NOTE: Don't probe WebGL2 on Mapbox's own canvas. Mapbox creates the context first,
+  // and subsequent `getContext("webgl2")` calls will often return null even when WebGL2 is available.
   try {
-    return !!canvas.getContext("webgl2");
+    const c = document.createElement("canvas");
+    return !!c.getContext("webgl2");
   } catch {
     return false;
   }
+}
+
+function mapIsUsingWebGL2(map: MapboxMap): boolean {
+  try {
+    const gl = (map as any)?.painter?.context?.gl;
+    // In some browsers/environments, `instanceof WebGL2RenderingContext` can be unreliable across realms;
+    // fall back to constructor name as a best-effort signal.
+    if (typeof WebGL2RenderingContext !== "undefined" && gl instanceof WebGL2RenderingContext) return true;
+    const name = gl?.constructor?.name ?? "";
+    return String(name).toLowerCase().includes("webgl2");
+  } catch {
+    return false;
+  }
+}
+
+function computePointBbox(fc: GeoJSONFeatureCollection): [[number, number], [number, number]] | null {
+  const feats: any[] = (fc as any)?.features ?? [];
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  let any = false;
+  for (const f of feats) {
+    const g = f?.geometry;
+    if (!g) continue;
+    if (g.type === "Point" && Array.isArray(g.coordinates)) {
+      const x = Number(g.coordinates[0]);
+      const y = Number(g.coordinates[1]);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      any = true;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    } else if (g.type === "MultiPoint" && Array.isArray(g.coordinates)) {
+      for (const c of g.coordinates) {
+        if (!Array.isArray(c)) continue;
+        const x = Number(c[0]);
+        const y = Number(c[1]);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        any = true;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  if (!any) return null;
+  return [
+    [minX, minY],
+    [maxX, maxY],
+  ];
 }
 
 function ensureSource(map: MapboxMap, id: string, data: GeoJSONFeatureCollection) {
@@ -267,6 +323,7 @@ export function MapView() {
   const mapRef = useRef<MapboxMap | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const datasetsRef = useRef<DatasetLayer[]>([]);
+  const lastFitKeyRef = useRef<string>("");
   const deckRef = useRef<any | null>(null);
   const deckEnabledRef = useRef<boolean>(false);
 
@@ -343,14 +400,16 @@ export function MapView() {
 
     // Determine deck availability as early as possible (before "load") so UI can enable/disable hex mode quickly.
     try {
-      const okEarly = supportsWebGL2OnCanvas(map.getCanvas());
-      deckEnabledRef.current = okEarly;
-      setDeckAvailable(okEarly);
-      setDeckError(okEarly ? null : "WebGL2 not available on Mapbox canvas.");
+      const runtimeOk = supportsWebGL2Runtime();
+      // We can't know if Mapbox picked WebGL2 until after it's initialized;
+      // keep this as a "capability" signal for now.
+      setDeckAvailable(runtimeOk ? null : false);
+      setDeckError(runtimeOk ? null : "WebGL2 not available in this browser/environment.");
+      deckEnabledRef.current = false;
     } catch {
       deckEnabledRef.current = false;
       setDeckAvailable(false);
-      setDeckError("WebGL2 not available on Mapbox canvas.");
+      setDeckError("WebGL2 not available in this browser/environment.");
     }
 
     map.on("load", () => {
@@ -359,10 +418,12 @@ export function MapView() {
       // deck.gl overlay for hexagon aggregation (optional)
       // deck.gl requires WebGL2. If the user's environment only supports WebGL1, skip it gracefully
       // (Mapbox layers like scatter/heatmap will still work).
-      const ok = supportsWebGL2OnCanvas(map.getCanvas());
+      const runtimeOk = supportsWebGL2Runtime();
+      const mapOk = mapIsUsingWebGL2(map);
+      const ok = runtimeOk && mapOk;
       deckEnabledRef.current = ok;
       setDeckAvailable(ok);
-      setDeckError(ok ? null : "WebGL2 not available on Mapbox canvas.");
+      setDeckError(ok ? null : runtimeOk ? "Mapbox is running on WebGL1 (deck.gl needs WebGL2)." : "WebGL2 not available.");
     });
 
     map.on("style.load", () => {
@@ -460,6 +521,24 @@ export function MapView() {
 
     const onStyleReady = () => {
       applyDatasetsToMap(map, datasets);
+
+      // Auto-fit to fresh agent results so users immediately see "all points" in view.
+      const agent = datasets.find((d) => d.id === "agent-occurrences");
+      if (agent?.visible) {
+        const n = (agent.data as any)?.features?.length ?? 0;
+        const fitKey = `${agent.id}:${n}`;
+        if (n > 0 && fitKey !== lastFitKeyRef.current) {
+          const b = computePointBbox(agent.data);
+          if (b) {
+            lastFitKeyRef.current = fitKey;
+            try {
+              map.fitBounds(b as any, { padding: 40, duration: 800, maxZoom: 7 });
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
     };
 
     if (map.isStyleLoaded()) onStyleReady();

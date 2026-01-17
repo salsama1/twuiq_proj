@@ -120,3 +120,13 @@ a {
   align-items: center;
 }
 
+
+
+/* Shared card style (used by Chat + Layers) */
+.card { border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,0.03); box-shadow: 0 8px 22px rgba(0,0,0,0.18); }
+.cardTight { border-radius: 12px; }
+.cardActive { border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.06); }
+
+/* Table column resize handle */
+.colResizer { width: 10px; height: 18px; border-radius: 999px; background: rgba(148,163,184,0.14); cursor: col-resize; flex: 0 0 auto; }
+.colResizer:hover { background: rgba(59,130,246,0.35); }
