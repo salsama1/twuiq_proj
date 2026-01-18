@@ -133,7 +133,7 @@ def build_vectorstore():
     print(f"Saving vector store to {VECTORSTORE_DIR}...")
     vectorstore.save_local(VECTORSTORE_DIR)
     
-    print("✅ Vector store created successfully!")
+    print("Vector store created successfully.")
     print(f"   Location: {VECTORSTORE_DIR}")
     print(f"   Documents: {len(documents)}")
 
@@ -142,5 +142,5 @@ if __name__ == "__main__":
     try:
         build_vectorstore()
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         sys.exit(1)

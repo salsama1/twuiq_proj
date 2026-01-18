@@ -13,7 +13,7 @@ from geoalchemy2.elements import WKTElement
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine, Base
+from app.database import SessionLocal, engine, Base, IS_POSTGIS
 from app.models.dbmodels import MODSOccurrence
 
 load_dotenv()
@@ -25,9 +25,12 @@ MODS_CSV_PATH = os.path.join(BASE_DIR, "MODS.csv")
 
 def load_mods_to_db():
     """Load MODS.csv data into database"""
-    print("Ensuring PostGIS extension is enabled...")
-    with engine.begin() as conn:
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+    if IS_POSTGIS:
+        print("Ensuring PostGIS extension is enabled...")
+        with engine.begin() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
+    else:
+        print("SQLite mode: skipping PostGIS extension setup (spatial queries will be limited).")
 
     print("Creating database tables...")
     Base.metadata.create_all(bind=engine)
@@ -66,8 +69,12 @@ def load_mods_to_db():
                             f"POINT({float(row.get('Longitude'))} {float(row.get('Latitude'))})",
                             srid=4326,
                         )
-                        if pd.notna(row.get('Longitude')) and pd.notna(row.get('Latitude'))
-                        else None
+                        if (IS_POSTGIS and pd.notna(row.get('Longitude')) and pd.notna(row.get('Latitude')))
+                        else (
+                            f"POINT({float(row.get('Longitude'))} {float(row.get('Latitude'))})"
+                            if (pd.notna(row.get('Longitude')) and pd.notna(row.get('Latitude')))
+                            else None
+                        )
                     ),
                     quadrangle=str(row.get('Quadrangle', '')) if pd.notna(row.get('Quadrangle')) else None,
                     admin_region=str(row.get('Admin Region', '')) if pd.notna(row.get('Admin Region')) else None,
@@ -109,11 +116,11 @@ def load_mods_to_db():
                 continue
         
         db.commit()
-        print(f"✅ Successfully loaded {len(df)} occurrences into database!")
+        print(f"Successfully loaded {len(df)} occurrences into database.")
         
     except Exception as e:
         db.rollback()
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         raise
     finally:
         db.close()
@@ -123,5 +130,5 @@ if __name__ == "__main__":
     try:
         load_mods_to_db()
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         sys.exit(1)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+import importlib.util
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -9,6 +10,40 @@ from typing import Any, Dict, Optional
 BASE_DIR = Path(__file__).resolve().parents[2]
 RASTERS_DIR = BASE_DIR / "data" / "rasters"
 RASTERS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_rasterio_proj_db() -> None:
+    """
+    Windows fix: avoid picking up an incompatible PROJ database from another install (e.g. PostGIS).
+
+    If PROJ_LIB points at PostGIS' proj.db (common when PostgreSQL/PostGIS is installed),
+    raster reprojection can fail with:
+      "DATABASE.LAYOUT.VERSION.MINOR = 2 whereas a number >= 6 is expected"
+
+    Rasterio wheels ship their own PROJ database in `rasterio/proj_data/proj.db`.
+    We force PROJ_LIB/PROJ_DATA to that directory when present.
+    """
+    try:
+        spec = importlib.util.find_spec("rasterio")
+        if not spec or not spec.origin:
+            return
+        proj_dir = Path(spec.origin).resolve().parent / "proj_data"
+        proj_db = proj_dir / "proj.db"
+        if not proj_db.exists():
+            return
+
+        cur = (os.getenv("PROJ_LIB") or "").lower()
+        # Override if it's empty OR clearly coming from a PostGIS install.
+        if (not cur) or ("postgis" in cur) or ("\\share\\contrib\\postgis" in cur):
+            os.environ["PROJ_LIB"] = str(proj_dir)
+            # Some builds read PROJ_DATA instead.
+            os.environ["PROJ_DATA"] = str(proj_dir)
+    except Exception:
+        return
+
+
+# Apply early (before rasterio/gdal are imported) to avoid proj.db conflicts.
+_ensure_rasterio_proj_db()
 
 
 def rasterio_available() -> bool:

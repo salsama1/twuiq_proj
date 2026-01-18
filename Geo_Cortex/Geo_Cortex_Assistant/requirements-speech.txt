@@ -1,0 +1,10 @@
+# Optional speech / TTS stack (ported from StoS.py)
+#
+# Notes:
+# - Whisper requires torch and ffmpeg; on Windows, installing torch can be heavy.
+# - Google Translate/TTS require GOOGLE_APPLICATION_CREDENTIALS + GCP_PROJECT_ID.
+#
+requests
+openai-whisper
+google-cloud-translate
+google-cloud-texttospeech

@@ -7,6 +7,7 @@ from app.models.dbmodels import MODSOccurrence
 from app.models.schemas import OccurrenceInfo
 
 from geoalchemy2.functions import ST_DWithin, ST_GeogFromText, ST_Distance
+from app.database import IS_POSTGIS
 
 router = APIRouter(prefix="/occurrences", tags=["occurrences"])
 
@@ -41,6 +42,12 @@ async def search_mods_occurrences(
         query = query.filter(MODSOccurrence.occurrence_type.ilike(f"%{occurrence_type}%"))
 
     if lat is not None and lon is not None and radius_km is not None:
+        if not IS_POSTGIS:
+            from fastapi import HTTPException, status
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="Spatial search requires PostGIS (set DATABASE_URL to a PostgreSQL+PostGIS database).",
+            )
         point = ST_GeogFromText(f"POINT({lon} {lat})")
         # geography distance uses meters
         query = query.filter(ST_DWithin(MODSOccurrence.geom, point, radius_km * 1000.0))
@@ -114,6 +121,12 @@ async def nearest_mods_occurrences(
     limit: int = 25,
 ):
     """Nearest occurrences by PostGIS distance (meters)."""
+    if not IS_POSTGIS:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Nearest/spatial queries require PostGIS (set DATABASE_URL to a PostgreSQL+PostGIS database).",
+        )
     point = ST_GeogFromText(f"POINT({lon} {lat})")
     dist_m = ST_Distance(MODSOccurrence.geom, point).label("distance_m")
     query = db.query(MODSOccurrence, dist_m)

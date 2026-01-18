@@ -13,3 +13,6 @@ faiss-cpu
 jinja2
 psycopg2-binary
 geoalchemy2
+shapely
+gpxpy
+fastkml

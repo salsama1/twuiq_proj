@@ -95,6 +95,9 @@ uvicorn app.main:app --reload
 ```
 
 > Visit `http://127.0.0.1:8000/docs` for Swagger UI
+>
+> If you built the frontend (`frontend/`) and have `frontend/dist` present in this repo,
+> the same FastAPI server will also serve the web UI at `http://127.0.0.1:8000/`.
 
 ---
 

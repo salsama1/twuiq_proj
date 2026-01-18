@@ -54,6 +54,17 @@ class RegionCount(BaseModel):
     count: int
 
 
+class TypeCount(BaseModel):
+    occurrence_type: Optional[str] = None
+    count: int
+
+
+class RegionTypeCount(BaseModel):
+    admin_region: Optional[str] = None
+    occurrence_type: Optional[str] = None
+    count: int
+
+
 class ImportanceCount(BaseModel):
     occurrence_importance: Optional[str] = None
     count: int
@@ -104,6 +115,8 @@ class AgentArtifacts(BaseModel):
     csv: Optional[str] = None
     # Analysis
     stats_by_region: Optional[List[RegionCount]] = None
+    stats_by_type: Optional[List[TypeCount]] = None
+    stats_region_by_type: Optional[List[RegionTypeCount]] = None
     importance_breakdown: Optional[List[ImportanceCount]] = None
     heatmap_bins: Optional[List[HeatmapBin]] = None
     # Geo
