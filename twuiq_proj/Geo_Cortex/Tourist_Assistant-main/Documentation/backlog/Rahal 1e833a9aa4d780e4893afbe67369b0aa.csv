@@ -1,0 +1,12 @@
+﻿Name,Date,ID,Person,Status,id
+Define project backlog,"April 6, 2025 → April 7, 2025",RAH-2,Hany Elshafei,Done,100
+Set up project Repository  & Virtual Env,"April 6, 2025 → April 11, 2025",RAH-1,Hany Elshafei,Done,100
+Setup Docker files For Database Container and Fastapi,"April 6, 2025 → April 11, 2025",RAH-4,Hany Elshafei,Done,100
+Pois Data Collection,"April 12, 2025 → April 16, 2025",RAH-5,Hany Elshafei,Done,80
+Restaurants Points Data Cleaning,"April 12, 2025 → April 16, 2025",RAH-6,Hany Elshafei,Done,90
+Create Database models according to ERD using SqlAlchmy for Fastapi,"April 14, 2025 → April 18, 2025",RAH-8,Hany Elshafei,Done,90
+Uploading Cleaned Restaurant Data to Database,"April 17, 2025 → April 21, 2025",RAH-9,Hany Elshafei,Done,100
+Create JWT Authentications and Tokens For User logging  u,"April 18, 2025 → April 22, 2025",RAH-10,Hany Elshafei,Done,100
+Creating To visit app API,"April 21, 2025 → April 25, 2025",RAH-11,Hany Elshafei,Done,100
+Create LLM App API,"April 27, 2025 → May 5, 2025",RAH-3,,Not started,
+Forntend Pages Design ,"April 14, 2025 → April 30, 2025",RAH-7,,Not started,

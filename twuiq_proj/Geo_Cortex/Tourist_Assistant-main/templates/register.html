@@ -1,0 +1,94 @@
+{% include 'layout.html' %}
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      Register
+    </div>
+    <div class="card-body">
+      <form id="registerForm">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Username</label>
+            <input type="text" class="form-control" name="user_name" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label>Email</label>
+            <input type="text" class="form-control" name="email" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>First Name</label>
+            <input type="text" class="form-control" name="first_name" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label>Last Name</label>
+            <input type="text" class="form-control" name="last_name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Password</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label>Role</label>
+            <input type="text" class="form-control" name="role" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Is Active</label>
+          <input type="text" class="form-control" name="is_active" value="true" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+      </form>
+    </div>
+    <div class="card-footer text-muted">
+      <a href="/auth/login-page">Already have an account?</a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("registerForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const formData = new FormData(this);
+
+  const data = {
+    user_name: formData.get("user_name"),
+    email: formData.get("email"),
+    first_name: formData.get("first_name"),
+    last_name: formData.get("last_name"),
+    password: formData.get("password"),
+    role: formData.get("role"),
+    is_active: formData.get("is_active") === "true"
+  };
+
+  try {
+    const response = await fetch("/auth/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      const errorMessages = Array.isArray(result.detail)
+        ? result.detail.map(e => e.msg).join(", ")
+        : result.detail;
+      alert("Error: " + errorMessages);
+    } else {
+      alert("User registered successfully!");
+      window.location.href = "/auth/login-page";
+    }
+
+  } catch (error) {
+    alert("Request failed: " + error);
+  }
+});
+</script>

@@ -1,0 +1,10 @@
+http://localhost:8000/auth/
+http://localhost:8000/auth/token
+http://localhost:8000/pydeck/
+http://localhost:8000/ragquery
+http://localhost:8000/tovisits/
+http://localhost:8000/tovisits/1
+http://localhost:8000/tovisits/create
+http://localhost:8000/tovisits/update/1
+http://localhost:8000/tovisits/delete/1
+http://localhost:8000/query

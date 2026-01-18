@@ -1,0 +1,9 @@
+#
+# Optional heavy GIS stack (vector/raster) for /files/parse
+#
+# NOTE: On Python 3.14, wheels may not be available for some packages.
+# If pip install fails, use Conda (recommended) or switch to Python 3.12.
+#
+fiona
+rasterio
+pyogrio

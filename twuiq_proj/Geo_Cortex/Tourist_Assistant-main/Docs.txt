@@ -1,0 +1,6 @@
+.venv\Scripts\activate
+uv pip install -r requirements.txt
+install wsl
+install docker
+docker-compose up --build -d
+uvicorn main:app --reload   

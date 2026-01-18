@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Places to Visit</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>🗺️ My Places to Visit</h2>
+    <button onclick="logout()">Logout</button>
+    <ul id="placesList"></ul>
+    <p id="message"></p>
+  </div>
+
+  <script src="tovisits.js"></script>
+</body>
+</html>
+<script>
+  // Function to fetch and display places to visit
+  async function fetchPlaces() {
+    try {
+      const response = await fetch('/api/places');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const places = await response.json();
+      const placesList = document.getElementById('placesList');
+      placesList.innerHTML = '';
+      places.forEach(place => {
+        const li = document.createElement('li');
+        li.textContent = place.name;
+        placesList.appendChild(li);
+      });
+    } catch (error) {
+      document.getElementById('message').textContent = 'Error fetching places: ' + error.message;
+    }
+  }
+
+  // Function to handle logout
+  function logout() {
+    window.location.href = '/logout';
+  }
+
+  // Fetch places on page load
+  window.onload = fetchPlaces;  
+</script>
+</html>

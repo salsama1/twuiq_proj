@@ -1,0 +1,73 @@
+{% include 'layout.html' %}
+<style>        .btn-send {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            padding: 18px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            justify-content: center;
+        }
+</style>
+
+
+<p class =btn-send >Total Tovisit found: {{ todos | length }} </p>
+<div class="container">
+    <div class="card text-center">
+        <div class="card-header">
+            Your Places To Visit!
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">
+                List of your destinations!
+            </h5>
+            <p class="card-text">
+                These are the places you'd like to visit.
+            </p>
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Number</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Priority</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for todo in todos %}
+                
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ todo.name }}</td>
+                    <td>{{ todo.category }}</td>
+                    <td>{{ todo.priority }}</td>
+                    <td>
+                      <a href="{{ todo.description }}" target="_blank" class="text-blue-600 hover:underline">
+                        Go To Location
+                      </a>
+                    </td>
+                    <td>
+                        <button onclick="window.location.href='/auth/tovisits/delete/{{ todo.id }}'"
+                                type="button" class="btn btn-info">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <a href="/auth/chat" class="btn btn-primary">Ask me</a>
+             <a href="/auth/map/" class="btn btn-primary">All restaurants Map</a>
+        </div>
+    </div>
+</div>
